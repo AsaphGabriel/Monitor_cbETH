@@ -1,0 +1,5 @@
+relationship f6246b82-77c8-44c2-b984-ee23daf96643
+	joinOnDateBehavior: datePartOnly
+	fromColumn: fato_historico_30d.data
+	toColumn: LocalDateTable_ea24e131-b418-4fad-96ee-4bcd8ab1a6af.Date
+

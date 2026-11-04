@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "Monitor_cbETH"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "4dc20985-b1cc-5baa-0aa7-000000000002"
+  }
+}

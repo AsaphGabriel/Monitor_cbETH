@@ -1,0 +1,78 @@
+// ==============================================================================
+// MEDIDAS DAX CANÔNICAS - MONITOR cbETH (YGGDRASIL DATA ENGINEERING)
+// Tabela de Destino: _Medidas (ou direto na fato_posicao_atual)
+// ==============================================================================
+
+// --- 1. POSIÇÃO E SALDOS ---
+
+[Saldo cbETH] = 
+COALESCE(SELECTEDVALUE(fato_posicao_atual[saldo_cbeth]), 0)
+
+[Saldo ETH Gas] = 
+COALESCE(SELECTEDVALUE(fato_posicao_atual[saldo_eth_gas]), 0)
+
+// --- 2. COTAÇÕES & TAXA DE CONVERSÃO (EXCHANGE RATE) ---
+
+[Preço ETH USD] = 
+COALESCE(SELECTEDVALUE(fato_posicao_atual[preco_eth_usd]), 0)
+
+[Preço cbETH USD] = 
+COALESCE(SELECTEDVALUE(fato_posicao_atual[preco_cbeth_usd]), 0)
+
+[Taxa Câmbio USD/BRL] = 
+COALESCE(SELECTEDVALUE(fato_posicao_atual[taxa_usd_brl]), 5.50)
+
+[Exchange Rate Atual] = 
+DIVIDE([Preço cbETH USD], [Preço ETH USD], 0)
+
+// --- 3. PATRIMÔNIO CONVERTIDO ---
+
+[Patrimônio cbETH em ETH] = 
+[Saldo cbETH] * [Exchange Rate Atual]
+
+[Patrimônio cbETH USD] = 
+[Saldo cbETH] * [Preço cbETH USD]
+
+[Patrimônio cbETH BRL] = 
+[Patrimônio cbETH USD] * [Taxa Câmbio USD/BRL]
+
+[Patrimônio Total USD] = 
+[Patrimônio cbETH USD] + ([Saldo ETH Gas] * [Preço ETH USD])
+
+[Patrimônio Total BRL] = 
+[Patrimônio Total USD] * [Taxa Câmbio USD/BRL]
+
+// --- 4. ANÁLISE DE RENDIMENTO & APY DE STAKING ---
+
+[Staking Yield Ganho em ETH] = 
+// O modelo cToken iniciou com paridade 1.0. 
+// O ganho líquido de staking em ETH é a diferença entre o valor em ETH e os cbETH emitidos.
+[Patrimônio cbETH em ETH] - [Saldo cbETH]
+
+[Staking Yield Ganho em USD] = 
+[Staking Yield Ganho em ETH] * [Preço ETH USD]
+
+[Staking Yield Ganho em BRL] = 
+[Staking Yield Ganho em USD] * [Taxa Câmbio USD/BRL]
+
+[APY Anualizado 30d] = 
+VAR DataMinima = MIN(fato_historico_30d[data])
+VAR DataMaxima = MAX(fato_historico_30d[data])
+VAR TxInicial = 
+    CALCULATE(
+        AVERAGE(fato_historico_30d[taxa_conversao_cbeth_eth]), 
+        fato_historico_30d[data] = DataMinima
+    )
+VAR TxFinal = 
+    CALCULATE(
+        AVERAGE(fato_historico_30d[taxa_conversao_cbeth_eth]), 
+        fato_historico_30d[data] = DataMaxima
+    )
+VAR DiasDecorridos = DATEDIFF(DataMinima, DataMaxima, DAY)
+VAR RetornoPeriodo = DIVIDE(TxFinal - TxInicial, TxInicial, 0)
+RETURN
+    IF(
+        DiasDecorridos > 0,
+        RetornoPeriodo * (365 / DiasDecorridos),
+        0
+    )

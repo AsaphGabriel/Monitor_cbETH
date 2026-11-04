@@ -1,0 +1,187 @@
+table _Medidas
+	lineageTag: 543fd624-f95f-427b-9e57-4e4b187485fa
+
+	measure 'Saldo cbETH' = COALESCE(SELECTEDVALUE(fato_posicao_atual[saldo_cbeth]), 0)
+		formatString: #,0.000000
+		displayFolder: 1. Posição
+		lineageTag: 467f6c34-88c1-4630-85a7-a64e18fec0a1
+
+	measure 'Saldo ETH Gas' = COALESCE(SELECTEDVALUE(fato_posicao_atual[saldo_eth_gas]), 0)
+		formatString: #,0.000000
+		displayFolder: 1. Posição
+		lineageTag: 73d8ce9b-3c9e-41c9-84da-77842f86ba81
+
+	measure 'Preço ETH USD' = COALESCE(SELECTEDVALUE(fato_posicao_atual[preco_eth_usd]), 0)
+		formatString: $ #,##0.00
+		displayFolder: 2. Cotações
+		lineageTag: 0095eca7-2c9e-4fc3-9526-65469160853e
+
+	measure 'Preço cbETH USD' = COALESCE(SELECTEDVALUE(fato_posicao_atual[preco_cbeth_usd]), 0)
+		formatString: $ #,##0.00
+		displayFolder: 2. Cotações
+		lineageTag: 7aaa2c3f-b070-4dd9-8924-9fc350c497ef
+
+	measure 'Taxa Câmbio USD/BRL' = COALESCE(SELECTEDVALUE(fato_posicao_atual[taxa_usd_brl]), 5.50)
+		formatString: R$ #,##0.00
+		displayFolder: 2. Cotações
+		lineageTag: febc734d-344f-4bd5-9ed3-0e48e849c88b
+
+	measure 'Exchange Rate Atual' = DIVIDE([Preço cbETH USD], [Preço ETH USD], 0)
+		formatString: 0.00000
+		displayFolder: 2. Cotações
+		lineageTag: 92ab502b-d5f0-4e55-b016-79e132098f65
+
+	measure 'Taxa cbETH Histórica' = AVERAGE(fato_historico_30d[taxa_conversao_cbeth_eth])
+		formatString: 0.00000
+		displayFolder: 2. Cotações
+		lineageTag: 16b5666d-1def-46b0-909b-57f0dff5783d
+
+	measure 'Patrimônio cbETH em ETH' = [Saldo cbETH] * [Exchange Rate Atual]
+		formatString: #,0.000000
+		displayFolder: 3. Patrimônio
+		lineageTag: 46bcd4ad-65af-4ef2-82ce-973d35f808c5
+
+	measure 'Patrimônio cbETH USD' = [Saldo cbETH] * [Preço cbETH USD]
+		formatString: $ #,##0.00
+		displayFolder: 3. Patrimônio
+		lineageTag: 7535cf4d-eeaa-448d-aa18-4b38b3ed1507
+
+	measure 'Patrimônio cbETH BRL' = [Patrimônio cbETH USD] * [Taxa Câmbio USD/BRL]
+		formatString: R$ #,##0.00
+		displayFolder: 3. Patrimônio
+		lineageTag: 0bc4ab6c-b6c1-4e22-9bb9-e9662dd4f1f8
+
+	measure 'Patrimônio Total USD' = [Patrimônio cbETH USD] + ([Saldo ETH Gas] * [Preço ETH USD])
+		formatString: $ #,##0.00
+		displayFolder: 3. Patrimônio
+		lineageTag: 6eae11f5-18c3-4238-8b31-917c593ac82b
+
+	measure 'Patrimônio Total BRL' = [Patrimônio Total USD] * [Taxa Câmbio USD/BRL]
+		formatString: R$ #,##0.00
+		displayFolder: 3. Patrimônio
+		lineageTag: 42e77790-7c7c-4241-b98e-289f0f2dd04d
+
+	measure 'Total Valor USD Ativos' = SUM(fato_composicao_ativos[valor_usd])
+		formatString: $ #,##0.00
+		displayFolder: 3. Patrimônio
+		lineageTag: ed1b7d4a-d659-4d78-a9ec-96d8b3f9c70f
+
+	measure 'Total Valor BRL Ativos' = SUM(fato_composicao_ativos[valor_brl])
+		formatString: R$ #,##0.00
+		displayFolder: 3. Patrimônio
+		lineageTag: 8f689538-2d9d-4f43-88bd-9025bda44560
+
+	measure 'Staking Yield Ganho em ETH' = [Patrimônio cbETH em ETH] - [Saldo cbETH]
+		formatString: +#,##0.000000 "ETH";-#,##0.000000 "ETH";0.000000 "ETH"
+		displayFolder: 4. Rendimento
+		lineageTag: 13845efa-2306-4438-9c73-71e601fda702
+
+	measure 'Staking Yield Ganho em USD' = [Staking Yield Ganho em ETH] * [Preço ETH USD]
+		formatString: +$ #,##0.00;-$ #,##0.00;$ 0.00
+		displayFolder: 4. Rendimento
+		lineageTag: 22c906a5-a79a-4f9a-b987-71f8f655152f
+
+	measure 'Staking Yield Ganho em BRL' = [Staking Yield Ganho em USD] * [Taxa Câmbio USD/BRL]
+		formatString: +R$ #,##0.00;-R$ #,##0.00;R$ 0.00
+		displayFolder: 4. Rendimento
+		lineageTag: 8bc87253-d1b8-4663-8434-6ad134351212
+
+	measure 'APY Staking Beacon Chain' = 0.031
+		formatString: 0.00%
+		displayFolder: 4. Rendimento
+		lineageTag: 45f945a5-4084-4fd3-bca5-65f911cfe199
+
+	measure 'Projeção Ganho Diário BRL' = DIVIDE([Patrimônio cbETH BRL] * [APY Staking Beacon Chain], 365, 0)
+		formatString: +R$ #,##0.00;-R$ #,##0.00;R$ 0.00
+		displayFolder: 4. Rendimento
+		lineageTag: 4b2cc1ab-90f0-4857-a363-12b5bfe58f68
+
+	measure 'Projeção Ganho Mensal BRL' = DIVIDE([Patrimônio cbETH BRL] * [APY Staking Beacon Chain], 12, 0)
+		formatString: +R$ #,##0.00;-R$ #,##0.00;R$ 0.00
+		displayFolder: 4. Rendimento
+		lineageTag: f9ff6c8c-d0a8-44ac-943e-fa579fa73728
+
+	measure 'Projeção Ganho Anual BRL' = [Patrimônio cbETH BRL] * [APY Staking Beacon Chain]
+		formatString: +R$ #,##0.00;-R$ #,##0.00;R$ 0.00
+		displayFolder: 4. Rendimento
+		lineageTag: e447cbf2-5836-4fda-9edd-2bef1151074f
+
+	measure 'Status Protocolo Staking' = "Beacon Chain (Ativo • cToken)"
+		displayFolder: 4. Rendimento
+		lineageTag: 8289d6b0-2833-47df-b3c0-03be5dc78130
+
+	measure 'Lucro Staking Percentual' = VAR TxAtual = [Exchange Rate Atual] RETURN IF(TxAtual > 0, TxAtual - 1.0, 0)
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 4. Rendimento
+		lineageTag: 9f42683f-f486-4394-bea8-465401f06d3e
+
+	measure 'Lucro Staking Garantido BRL' = VAR RendAcum = [Exchange Rate Atual] - 1.0 VAR BaseCusto = [Saldo cbETH] * 1000 * [Taxa Câmbio USD/BRL] RETURN IF(RendAcum > 0, BaseCusto * RendAcum, 0)
+		formatString: +R$ #,##0.00;-R$ #,##0.00;R$ 0.00
+		displayFolder: 4. Rendimento
+		lineageTag: 5d8f25c6-6f9e-4811-88f4-4aa41b51e987
+
+	measure 'Variação Mercado 30d BRL' = VAR DataMin = MIN(fato_historico_30d[data]) VAR PrecoIni = CALCULATE(SELECTEDVALUE(fato_historico_30d[preco_cbeth_usd]), fato_historico_30d[data] = DataMin) VAR PrecoAtu = [Preço cbETH USD] VAR Cambio = [Taxa Câmbio USD/BRL] VAR Saldo = [Saldo cbETH] RETURN IF(PrecoIni > 0, (PrecoAtu - PrecoIni) * Saldo * Cambio, 0)
+		formatString: +R$ #,##0.00;-R$ #,##0.00;R$ 0.00
+		displayFolder: 4. Rendimento
+		lineageTag: 900c1240-3ca8-443b-901a-e3f99734325e
+
+	measure 'Variação Mercado 30d Pct' = VAR DataMin = MIN(fato_historico_30d[data]) VAR PrecoIni = CALCULATE(SELECTEDVALUE(fato_historico_30d[preco_cbeth_usd]), fato_historico_30d[data] = DataMin) VAR PrecoAtu = [Preço cbETH USD] RETURN IF(PrecoIni > 0, DIVIDE(PrecoAtu - PrecoIni, PrecoIni, 0), 0)
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 4. Rendimento
+		lineageTag: f7f3596b-9698-42bb-ae2a-026588610784
+
+	measure 'Resultado Líquido 30d BRL' = [Lucro Staking Garantido BRL] + [Variação Mercado 30d BRL]
+		formatString: +R$ #,##0.00;-R$ #,##0.00;R$ 0.00
+		displayFolder: 4. Rendimento
+		lineageTag: 14e886b8-142a-4e3d-a551-e444411eb9b6
+
+	measure 'Status P&L Imediato' = IF([Resultado Líquido 30d BRL] >= 0, "Lucro Consolidado", "Em Recuperação (Staking Ativo)")
+		displayFolder: 4. Rendimento
+		lineageTag: 20d05b28-ff8f-4e2d-9be8-7e15584e381b
+
+	measure 'Média ETH USD 30d' = AVERAGE(fato_historico_30d[preco_eth_usd])
+		formatString: $ #,##0.00
+		displayFolder: 5. Termômetro
+		lineageTag: f696b41e-d365-4cbb-9b0e-d1cf54feae5c
+
+	measure 'ETH Drawdown vs Média 30d' = VAR Media = [Média ETH USD 30d] VAR Atual = [Preço ETH USD] RETURN IF(Media > 0, DIVIDE(Atual - Media, Media, 0), 0)
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 5. Termômetro
+		lineageTag: 0d85b14f-c17e-4358-b2a3-09f770cfe272
+
+	measure 'Taxa Máxima Histórica 30d' = MAX(fato_historico_30d[taxa_conversao_cbeth_eth])
+		formatString: 0.00000
+		displayFolder: 5. Termômetro
+		lineageTag: b20f71b0-eea3-4e00-94f6-1495b21cdad8
+
+	measure 'Deságio cbETH vs Máxima' = VAR Maxima = [Taxa Máxima Histórica 30d] VAR Atual = [Exchange Rate Atual] RETURN IF(Maxima > 0, DIVIDE(Atual - Maxima, Maxima, 0), 0)
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: 5. Termômetro
+		lineageTag: 74412531-5048-4d66-af85-90d8beb5b8b4
+
+	measure 'Score Oportunidade Compra' = VAR Drawdown = [ETH Drawdown vs Média 30d] VAR PtsDD = MIN(MAX(-Drawdown * 400, 0), 60) VAR PtsStk = 30 VAR PtsBase = 10 RETURN ROUND(PtsBase + PtsDD + PtsStk, 0)
+		formatString: 0
+		displayFolder: 5. Termômetro
+		lineageTag: 5b6e13e8-7bf9-473c-a8c3-cf4a3d417255
+
+	measure 'Sinal Termômetro Aporte' = VAR Drawdown = [ETH Drawdown vs Média 30d] RETURN SWITCH(TRUE(), Drawdown <= -0.05, "OPORTUNIDADE DE APORTE", Drawdown <= 0.00, "ZONA NEUTRA / FAVORÁVEL", "CAUTELA / AGUARDAR")
+		displayFolder: 5. Termômetro
+		lineageTag: 5c603c50-573a-454f-a933-a7e5da0ca3ff
+
+	column _Ordem
+		dataType: string
+		isHidden
+		lineageTag: 3fa81603-bdc6-4319-b126-6a0f4a98020c
+		summarizeBy: none
+		sourceColumn: _Ordem
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Medidas = m
+		mode: import
+		source =
+				let
+					Fonte = #table({"_Ordem"}, {{1}})
+				in
+					Fonte
+

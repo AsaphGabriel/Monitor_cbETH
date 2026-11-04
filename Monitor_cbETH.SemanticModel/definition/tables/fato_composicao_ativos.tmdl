@@ -1,0 +1,61 @@
+table fato_composicao_ativos
+	lineageTag: 9be2e2d5-c192-4596-8ac5-0c77043b853b
+
+	column ativo
+		dataType: string
+		lineageTag: ef64e214-1b00-4a3e-8498-399b37a36a01
+		summarizeBy: none
+		sourceColumn: ativo
+
+	column saldo
+		dataType: double
+		formatString: #,0.000000
+		lineageTag: 5e88e8bd-9396-4093-8494-f164a3d14c86
+		summarizeBy: sum
+		sourceColumn: saldo
+
+	column preco_usd
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 07d59bd3-981e-4e83-8a58-63a6bfe4de77
+		summarizeBy: sum
+		sourceColumn: preco_usd
+
+	column valor_usd
+		dataType: double
+		formatString: #,0.00
+		lineageTag: a47b38a0-2f10-4b7a-995a-9f208163774f
+		summarizeBy: sum
+		sourceColumn: valor_usd
+
+	column valor_brl
+		dataType: double
+		formatString: #,0.00
+		lineageTag: b7e9e5d0-9922-42b3-bdf2-f4d95f1c6847
+		summarizeBy: sum
+		sourceColumn: valor_brl
+
+	column percentual
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 43f68e75-ac8d-4a02-a9b2-ccc006165139
+		summarizeBy: sum
+		sourceColumn: percentual
+
+	partition fato_composicao_ativos = m
+		mode: import
+		source =
+				let
+					RawCsv = "ativo,saldo,preco_usd,valor_usd,valor_brl,percentual#(lf)cbETH Staked,0.020581,2775.63,57.12,314.19,0.990#(lf)ETH Gas,0.000244,2430.57,0.59,3.26,0.010",
+					Fonte = Csv.Document(RawCsv, [Delimiter=",", Columns=6, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+					Cabecalhos = Table.PromoteHeaders(Fonte, [PromoteAllScalars=true]),
+					Tipos = Table.TransformColumnTypes(Cabecalhos, {
+						{"saldo", type number},
+						{"preco_usd", type number},
+						{"valor_usd", type number},
+						{"valor_brl", type number},
+						{"percentual", type number}
+					}, "en-US")
+				in
+					Tipos
+

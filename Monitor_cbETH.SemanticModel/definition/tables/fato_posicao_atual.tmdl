@@ -1,0 +1,116 @@
+table fato_posicao_atual
+	lineageTag: 91e19e14-e670-47fa-8d43-db4ac5ddf84d
+
+	column data_hora
+		dataType: string
+		lineageTag: df1e5a88-a845-4c27-b3b9-afc285890bff
+		summarizeBy: none
+		sourceColumn: data_hora
+
+	column endereco_carteira
+		dataType: string
+		lineageTag: f1840e0f-a806-4978-8eed-e77e187be4ca
+		summarizeBy: none
+		sourceColumn: endereco_carteira
+
+	column rede
+		dataType: string
+		lineageTag: b8028818-117a-456e-9993-c6ae0ff8de94
+		summarizeBy: none
+		sourceColumn: rede
+
+	column saldo_cbeth
+		dataType: double
+		formatString: #,0.000000
+		lineageTag: 65514311-602e-42e2-98a7-8612d966fb17
+		summarizeBy: sum
+		sourceColumn: saldo_cbeth
+
+	column saldo_eth_gas
+		dataType: double
+		formatString: #,0.000000
+		lineageTag: 75bf73b0-5632-4e65-9141-8cfe11eed414
+		summarizeBy: sum
+		sourceColumn: saldo_eth_gas
+
+	column preco_eth_usd
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 1ff91a51-2f81-438a-b9cd-2e207d8e717f
+		summarizeBy: sum
+		sourceColumn: preco_eth_usd
+
+	column preco_cbeth_usd
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 2850d354-bba5-43db-bb1b-65d0bf654969
+		summarizeBy: sum
+		sourceColumn: preco_cbeth_usd
+
+	column taxa_conversao_cbeth_eth
+		dataType: double
+		formatString: #,0.000000
+		lineageTag: 0f0d5e63-4a81-4b2a-bef0-0a7667bfda52
+		summarizeBy: sum
+		sourceColumn: taxa_conversao_cbeth_eth
+
+	column taxa_usd_brl
+		dataType: double
+		formatString: #,0.00
+		lineageTag: a16a399b-a509-418e-a7c9-7208be5ffcd7
+		summarizeBy: sum
+		sourceColumn: taxa_usd_brl
+
+	column patrimonio_cbeth_eth
+		dataType: double
+		formatString: #,0.000000
+		lineageTag: 8898213e-b052-4a82-9a5e-96fa87a27e08
+		summarizeBy: sum
+		sourceColumn: patrimonio_cbeth_eth
+
+	column patrimonio_cbeth_usd
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 779df6ab-3763-4f1b-a0cb-4c9d17bd89e2
+		summarizeBy: sum
+		sourceColumn: patrimonio_cbeth_usd
+
+	column patrimonio_cbeth_brl
+		dataType: double
+		formatString: #,0.00
+		lineageTag: a8859e78-dae8-41ae-a864-9eb691347657
+		summarizeBy: sum
+		sourceColumn: patrimonio_cbeth_brl
+
+	column patrimonio_total_usd
+		dataType: double
+		formatString: #,0.00
+		lineageTag: dbbcabcb-2472-44c9-9590-26b1825bc41f
+		summarizeBy: sum
+		sourceColumn: patrimonio_total_usd
+
+	column patrimonio_total_brl
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 6594c220-4791-46ec-8523-af1e98d09650
+		summarizeBy: sum
+		sourceColumn: patrimonio_total_brl
+
+	partition fato_posicao_atual = m
+		mode: import
+		source =
+				let
+					RawCsv = "data_hora,endereco_carteira,rede,saldo_cbeth,saldo_eth_gas,preco_eth_usd,preco_cbeth_usd,taxa_conversao_cbeth_eth,taxa_usd_brl,patrimonio_cbeth_eth,patrimonio_cbeth_usd,patrimonio_cbeth_brl,patrimonio_total_usd,patrimonio_total_brl#(lf)2026-10-14 20:24:30,0xc4cfde467bc76d0d6df365584648371b1954b154,Base,0.020581,0.000244,2430.57,2775.63,1.14197,5.5000,0.023503,57.12,314.19,57.72,317.45",
+					Fonte = Csv.Document(RawCsv, [Delimiter=",", Columns=14, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+					Cabecalhos = Table.PromoteHeaders(Fonte, [PromoteAllScalars=true]),
+					Tipos = Table.TransformColumnTypes(Cabecalhos, {
+						{"saldo_cbeth", type number}, {"saldo_eth_gas", type number},
+						{"preco_eth_usd", type number}, {"preco_cbeth_usd", type number},
+						{"taxa_conversao_cbeth_eth", type number}, {"taxa_usd_brl", type number},
+						{"patrimonio_cbeth_eth", type number}, {"patrimonio_cbeth_usd", type number},
+						{"patrimonio_cbeth_brl", type number}, {"patrimonio_total_usd", type number},
+						{"patrimonio_total_brl", type number}
+					}, "en-US")
+				in
+					Tipos
+

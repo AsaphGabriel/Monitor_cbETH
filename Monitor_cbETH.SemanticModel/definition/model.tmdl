@@ -1,0 +1,21 @@
+model Model
+	culture: pt-BR
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: pt-BR
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation PBI_QueryOrder = ["_Medidas","fato_posicao_atual","fato_historico_30d","fato_composicao_ativos"]
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table _Medidas
+ref table fato_posicao_atual
+ref table fato_historico_30d
+ref table fato_composicao_ativos
+ref table DateTableTemplate_56c7d7fd-931d-4663-917c-9349d78dfc17
+ref table LocalDateTable_ea24e131-b418-4fad-96ee-4bcd8ab1a6af
+

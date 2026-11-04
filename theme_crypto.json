@@ -1,0 +1,91 @@
+{
+  "name": "CryptoExecutiveDark-f7e2a91c.json",
+  "dataColors": [
+    "#00D2FF",
+    "#8B5CF6",
+    "#10B981",
+    "#F59E0B",
+    "#EC4899",
+    "#3B82F6",
+    "#06B6D4",
+    "#6366F1"
+  ],
+  "background": "#080B11",
+  "secondaryBackground": "#121826",
+  "foreground": "#F1F5F9",
+  "firstLevelElements": "#F1F5F9",
+  "secondLevelElements": "#94A3B8",
+  "thirdLevelElements": "#1E2638",
+  "fourthLevelElements": "#64748B",
+  "tableAccent": "#00D2FF",
+  "good": "#10B981",
+  "neutral": "#F59E0B",
+  "bad": "#EF4444",
+  "maximum": "#00D2FF",
+  "center": "#8B5CF6",
+  "minimum": "#1E2638",
+  "null": "#64748B",
+  "textClasses": {
+    "callout": {
+      "fontSize": 24,
+      "fontFace": "DIN",
+      "color": "#F8FAFC"
+    },
+    "title": {
+      "fontSize": 11,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#94A3B8"
+    },
+    "header": {
+      "fontSize": 11,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#F1F5F9"
+    },
+    "label": {
+      "fontSize": 10,
+      "fontFace": "Segoe UI",
+      "color": "#CBD5E1"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#121826"
+              }
+            },
+            "transparency": 0
+          }
+        ],
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#1E2638"
+              }
+            },
+            "radius": 12,
+            "width": 1
+          }
+        ],
+        "title": [
+          {
+            "show": true,
+            "fontColor": {
+              "solid": {
+                "color": "#94A3B8"
+              }
+            },
+            "fontSize": 10,
+            "fontFamily": "Segoe UI Semibold"
+          }
+        ]
+      }
+    }
+  }
+}

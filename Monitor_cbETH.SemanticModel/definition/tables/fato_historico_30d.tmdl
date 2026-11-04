@@ -1,0 +1,54 @@
+table fato_historico_30d
+	lineageTag: 9d94d761-9c54-44fa-a922-35ad69786c14
+
+	column data
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 3795d1f6-43c1-4ef1-8e62-8b447775185b
+		summarizeBy: none
+		sourceColumn: data
+
+		variation Variação
+			isDefault
+			relationship: f6246b82-77c8-44c2-b984-ee23daf96643
+			defaultHierarchy: LocalDateTable_ea24e131-b418-4fad-96ee-4bcd8ab1a6af.'Hierarquia de datas'
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column preco_eth_usd
+		dataType: double
+		formatString: $ #,##0.00
+		lineageTag: 9b9d2889-4ef0-4563-ac39-7781f13c2599
+		summarizeBy: sum
+		sourceColumn: preco_eth_usd
+
+	column preco_cbeth_usd
+		dataType: double
+		formatString: $ #,##0.00
+		lineageTag: 855a8655-659a-48f5-b966-ee5ab188605d
+		summarizeBy: sum
+		sourceColumn: preco_cbeth_usd
+
+	column taxa_conversao_cbeth_eth
+		dataType: double
+		formatString: 0.00000
+		lineageTag: 297802c9-a512-4aa5-a06c-0d4c55d66f83
+		summarizeBy: sum
+		sourceColumn: taxa_conversao_cbeth_eth
+
+	partition fato_historico_30d = m
+		mode: import
+		source =
+				let
+					RawCsv = "data,preco_eth_usd,preco_cbeth_usd,taxa_conversao_cbeth_eth#(lf)2026-09-14,2604.46,2957.83,1.13568#(lf)2026-09-15,2402.62,2735.42,1.13852#(lf)2026-09-16,2413.93,2745.87,1.13751#(lf)2026-09-17,2456.35,2794.39,1.13762#(lf)2026-09-18,2632.87,2993.66,1.13703#(lf)2026-09-19,2636.52,3002.26,1.13872#(lf)2026-09-20,2632.06,3002.40,1.14070#(lf)2026-09-21,2799.60,3192.08,1.14019#(lf)2026-09-22,2753.86,3142.57,1.14115#(lf)2026-09-23,2670.75,3044.90,1.14009#(lf)2026-09-24,2684.06,3062.72,1.14108#(lf)2026-09-25,2693.83,3070.46,1.13981#(lf)2026-09-26,2682.56,3058.09,1.13999#(lf)2026-09-27,2689.62,3071.20,1.14187#(lf)2026-09-28,2681.04,3057.53,1.14043#(lf)2026-09-29,2691.17,3068.24,1.14011#(lf)2026-09-30,2677.86,3050.42,1.13913#(lf)2026-10-01,2701.72,3080.10,1.14005#(lf)2026-10-02,2668.03,3042.11,1.14021#(lf)2026-10-03,2687.21,3067.01,1.14134#(lf)2026-10-04,2701.84,3083.16,1.14113#(lf)2026-10-05,2711.46,3093.22,1.14079#(lf)2026-10-06,2693.14,3074.22,1.14150#(lf)2026-10-07,2575.05,2939.14,1.14139#(lf)2026-10-08,2466.17,2818.69,1.14294#(lf)2026-10-09,2478.82,2828.21,1.14095#(lf)2026-10-10,2506.41,2860.33,1.14121#(lf)2026-10-11,2534.36,2893.72,1.14179#(lf)2026-10-12,2521.74,2878.81,1.14159#(lf)2026-10-13,2504.95,2860.80,1.14206",
+					Fonte = Csv.Document(RawCsv, [Delimiter=",", Columns=4, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+					Cabecalhos = Table.PromoteHeaders(Fonte, [PromoteAllScalars=true]),
+					Tipos = Table.TransformColumnTypes(Cabecalhos, {
+						{"data", type date},
+						{"preco_eth_usd", type number},
+						{"preco_cbeth_usd", type number},
+						{"taxa_conversao_cbeth_eth", type number}
+					}, "en-US")
+				in
+					Tipos
+
