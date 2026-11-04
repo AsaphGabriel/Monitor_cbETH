@@ -82,134 +82,109 @@
     </div>
   </section>
 
-  <!-- 3. CARTÕES EXECUTIVOS DE KPI (4 COLUNAS) -->
-  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-    <!-- Card 1: Patrimônio Total da Carteira -->
-    <div class="card-executive p-5">
-      <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
-        <span>Patrimônio Total</span>
-        <span id="kpiPatrimonioBadge" class="text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded-full">+0.55%</span>
-      </div>
-      <div class="mt-3">
-        <span id="cardPatrimonioTotal" class="text-2xl font-extrabold text-white font-mono">$57.60</span>
-      </div>
-      <div id="cardPatrimonioSubtitle" class="mt-2 text-xs text-slate-400 font-mono">cbETH (0.020581) + Gas ETH (0.000244)</div>
-    </div>
+  <!-- 3. FEEDBACK ANALÍTICO EXECUTIVO (4 PILARES: PATRIMÔNIO, P&L ALL TIME, DECISÃO DE COMPRA, STAKING) -->
+  <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
 
-    <!-- Card 2: Preço Médio de Aquisição (DCA) -->
-    <div class="card-executive p-5">
-      <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
-        <span>Preço Médio (DCA)</span>
-        <span class="text-cyan-400 font-mono bg-cyan-500/10 px-2 py-0.5 rounded-full">Ponderado</span>
-      </div>
-      <div class="mt-3">
-        <span id="cardDca" class="text-2xl font-extrabold text-white font-mono">$2,904.45</span>
-      </div>
-      <div class="mt-2 text-xs text-slate-400 font-mono flex items-center justify-between">
-        <span>Média do Período:</span>
-        <span id="avg-period-price" data-metric="avg-price" class="text-slate-200 font-bold">$2,735.31</span>
-      </div>
-    </div>
-
-    <!-- Card 3: Exchange Rate Atual (cbETH / ETH) -->
-    <div class="card-executive p-5">
-      <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
-        <span>Exchange Rate Atual</span>
-        <span class="text-purple-400 font-mono bg-purple-500/10 px-2 py-0.5 rounded-full">Oráculo</span>
-      </div>
-      <div class="mt-3 flex items-baseline gap-2">
-        <span id="cardExchangeRate" class="text-2xl font-extrabold text-cyan-400 font-mono">1.14215</span>
-        <span class="text-xs text-slate-400 font-mono">cbETH/ETH</span>
-      </div>
-      <div class="mt-2 text-xs text-slate-400 font-mono">Crescimento contínuo da Beacon Chain</div>
-    </div>
-
-    <!-- Card 4: Staking Yield Ganho em ETH -->
-    <div class="card-executive p-5">
-      <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
-        <span>Staking Yield Ganho</span>
-        <span class="text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded-full">Acumulado</span>
-      </div>
-      <div class="mt-3">
-        <span id="cardStakingYield" class="text-2xl font-extrabold text-emerald-400 font-mono">+0.002926 ETH</span>
-      </div>
-      <div id="cardStakingYieldFiat" class="mt-2 text-xs text-slate-400 font-mono">≈ $7.17 (R$ 36.55)</div>
-    </div>
-  </section>
-
-  <!-- 4. SEÇÃO GRÁFICA INTERATIVA (2 COLUNAS) -->
-  <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Gráfico 1: Patrimônio & Saldo em Carteira -->
-    <div class="card-executive p-5 flex flex-col justify-between h-[420px]">
-      <div class="flex items-center justify-between mb-2">
-        <div>
-          <h2 class="text-sm font-bold text-white flex items-center gap-2">
-            <span>Evolução Patrimonial & Saldo</span>
-          </h2>
-          <p class="text-xs text-slate-400 font-mono mt-0.5">Saldo em carteira ponderado pela cotação spot diária.</p>
+    <!-- Pilar 1: Patrimônio Total da Carteira -->
+    <div class="card-executive p-5 flex flex-col justify-between border-l-4 border-l-cyan-500">
+      <div>
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          <span>Patrimônio Total</span>
+          <span id="kpiPatrimonioBadge" class="text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 text-xs font-semibold">+0.55% All Time</span>
         </div>
-      </div>
-      <div class="w-full h-[320px] relative">
-        <canvas id="chart-balance"></canvas>
-      </div>
-    </div>
-
-    <!-- Gráfico 2: Cotação de Mercado com Toggle USD | ETH -->
-    <div class="card-executive p-5 flex flex-col justify-between h-[420px]">
-      <div class="flex items-center justify-between mb-2">
-        <div>
-          <h2 class="text-sm font-bold text-white flex items-center gap-2">
-            <span>Cotação cbETH & Paridade</span>
-          </h2>
-          <p class="text-xs text-slate-400 font-mono mt-0.5">Curva histórica comparada ao DCA / Paridade Beacon Chain.</p>
+        <div class="mt-3">
+          <span id="cardPatrimonioTotal" class="text-3xl font-extrabold text-white font-mono">$57.60</span>
         </div>
-        <!-- Toggle USD | ETH -->
-        <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
-          <button id="btn-chart-usd" data-chart-mode="USD" class="px-2.5 py-1 text-xs font-bold font-mono bg-blue-600 text-white rounded transition active">USD</button>
-          <button id="btn-chart-eth" data-chart-mode="ETH" class="px-2.5 py-1 text-xs font-bold font-mono text-slate-400 hover:text-white rounded transition">ETH</button>
-        </div>
+        <div id="cardPatrimonioSubtitle" class="mt-1 text-xs text-slate-400 font-mono">cbETH (0.020581) + Gas ETH (0.000244)</div>
       </div>
-      <div class="w-full h-[320px] relative">
-        <canvas id="chart-market"></canvas>
-      </div>
-    </div>
-  </section>
-
-  <!-- 5. PAINÉIS ANALÍTICOS (3 COLUNAS) -->
-  <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <!-- Painel 1: P&L Instantâneo e Decomposição -->
-    <div id="panelPnl" class="card-executive p-5 flex flex-col justify-between border-l-4 border-l-emerald-500">
-      <div class="flex items-center justify-between">
-        <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">P&L Não Realizado</span>
-        <span id="pnlBadge" class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Lucro Consolidado</span>
-      </div>
-      <div class="my-3 flex items-baseline gap-2">
-        <span id="pnlMonetary" class="text-2xl font-extrabold text-emerald-400 font-mono">-$2.17</span>
-        <span id="pnlPercent" class="text-sm font-bold text-emerald-400 font-mono">(-3.64%)</span>
-      </div>
-      <div class="pt-2 border-t border-slate-800 text-xs font-mono space-y-1">
+      <div class="mt-4 pt-3 border-t border-slate-800 text-xs font-mono space-y-1">
         <div class="flex justify-between text-slate-400">
-          <span>Staking Yield:</span>
+          <span>Custo Investido:</span>
+          <span id="cardTotalInvested" class="text-slate-200 font-bold">$59.77</span>
+        </div>
+        <div class="flex justify-between text-slate-400">
+          <span>Cotação Spot:</span>
+          <span id="cardSpotPrice" class="text-cyan-400 font-bold">$2,798.78</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pilar 2: Resultado All Time (Lucro / Prejuízo Histórico) -->
+    <div id="panelPnl" class="card-executive p-5 flex flex-col justify-between border-l-4 border-l-amber-500">
+      <div>
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          <span>Resultado All Time (P&L)</span>
+          <span id="pnlBadge" class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">Em Recuperação</span>
+        </div>
+        <div class="mt-3 flex items-baseline gap-2">
+          <span id="pnlMonetary" class="text-3xl font-extrabold text-rose-400 font-mono">-$2.17</span>
+          <span id="pnlPercent" class="text-sm font-bold text-rose-400 font-mono">(-3.64%)</span>
+        </div>
+        <div class="mt-1 text-xs text-slate-400 font-mono">Variação acumulada desde o primeiro aporte</div>
+      </div>
+      <div class="mt-4 pt-3 border-t border-slate-800 text-xs font-mono space-y-1">
+        <div class="flex justify-between text-slate-400">
+          <span>Staking Yield Gerado:</span>
           <span id="pnlStakingYield" class="text-emerald-400 font-bold">+$7.17</span>
         </div>
         <div class="flex justify-between text-slate-400">
-          <span>Variação de Mercado:</span>
+          <span>Variação Spot ETH:</span>
           <span id="pnlMarketChange" class="text-rose-400 font-bold">-$5.00</span>
         </div>
       </div>
     </div>
 
-    <!-- Painel 2: Status Staking & APY -->
-    <div id="panelStaking" class="card-executive p-5 flex flex-col justify-between border-l-4 border-l-cyan-400">
-      <div class="flex items-center justify-between">
-        <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Status Staking & APY</span>
-        <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Beacon Chain</span>
+    <!-- Pilar 3: Radar Decisório de Compra (Se é bom comprar agora ou não) -->
+    <div id="panelThermometer" class="card-executive p-5 flex flex-col justify-between border-l-4 border-l-emerald-500">
+      <div>
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          <span>Termômetro Decisório</span>
+          <span id="thermoScore" class="px-2 py-0.5 text-xs font-bold font-mono rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Score 71/100</span>
+        </div>
+        <div class="my-2.5">
+          <div id="thermoSignalContainer" class="px-3 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between">
+            <span class="text-[10px] text-slate-300 font-mono uppercase">Sinal:</span>
+            <span id="thermoSignal" class="text-xs font-bold text-emerald-400 font-mono">OPORTUNIDADE DE APORTE</span>
+          </div>
+        </div>
+        <div class="text-[11px] text-slate-400 font-mono flex items-center justify-between">
+          <span>Seu Preço Médio (DCA):</span>
+          <span id="cardDca" class="text-amber-400 font-bold">$2,904.45</span>
+        </div>
       </div>
-      <div class="my-3 flex items-baseline gap-2">
-        <span id="stakingApy" class="text-2xl font-extrabold text-cyan-400 font-mono">3.10%</span>
-        <span class="text-xs text-slate-400 font-mono">APY Estimado</span>
+      <div class="mt-3 pt-2.5 border-t border-slate-800 grid grid-cols-2 gap-2 text-xs font-mono">
+        <div>
+          <span class="text-[10px] text-slate-400 block">Média Período</span>
+          <span id="avg-period-price" data-metric="avg-price" class="font-bold text-slate-200">$2,735.31</span>
+        </div>
+        <div class="text-right">
+          <span class="text-[10px] text-slate-400 block">Drawdown ETH</span>
+          <span id="thermoDrawdown" class="font-bold text-amber-400">-6.18%</span>
+          <span id="thermoDesagio" class="hidden">0.00%</span>
+        </div>
       </div>
-      <div class="pt-2 border-t border-slate-800 grid grid-cols-3 gap-1.5 text-center font-mono">
+    </div>
+
+    <!-- Pilar 4: Máquina de Rendimento & APY (Staking Beacon Chain) -->
+    <div id="panelStaking" class="card-executive p-5 flex flex-col justify-between border-l-4 border-l-purple-500">
+      <div>
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          <span>Staking & Rendimento</span>
+          <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">Beacon Chain</span>
+        </div>
+        <div class="mt-3 flex items-baseline justify-between">
+          <div>
+            <span id="cardExchangeRate" class="text-2xl font-extrabold text-purple-300 font-mono">1.14215</span>
+            <span class="text-xs text-slate-400 font-mono"> cbETH/ETH</span>
+          </div>
+          <span id="stakingApy" class="text-xs font-bold font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">3.10% APY</span>
+        </div>
+        <div class="mt-1 flex items-baseline justify-between text-xs font-mono">
+          <span id="cardStakingYield" class="text-emerald-400 font-bold">+0.002926 ETH</span>
+          <span id="cardStakingYieldFiat" class="text-slate-400">≈ $7.17 (R$ 36.55)</span>
+        </div>
+      </div>
+      <div class="mt-3 pt-2.5 border-t border-slate-800 grid grid-cols-3 gap-1.5 text-center font-mono">
         <div class="bg-slate-900/60 rounded p-1.5 border border-slate-800/40">
           <div class="text-[9px] text-slate-400 uppercase">Diário</div>
           <div id="stakingDaily" class="text-xs font-bold text-white">+$0.01</div>
@@ -225,27 +200,42 @@
       </div>
     </div>
 
-    <!-- Painel 3: Termômetro Decisório de Compra -->
-    <div id="panelThermometer" class="card-executive p-5 flex flex-col justify-between border-l-4 border-l-emerald-500">
-      <div class="flex items-center justify-between">
-        <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Termômetro de Compra</span>
-        <span id="thermoScore" class="px-2 py-0.5 text-xs font-bold font-mono rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">Score 71/100</span>
-      </div>
-      <div class="my-2">
-        <div id="thermoSignalContainer" class="px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between">
-          <span class="text-[10px] text-slate-300 font-mono uppercase">Sinal:</span>
-          <span id="thermoSignal" class="text-xs font-bold text-emerald-400 font-mono">OPORTUNIDADE DE APORTE</span>
-        </div>
-      </div>
-      <div class="pt-2 border-t border-slate-800 grid grid-cols-2 gap-2 text-xs font-mono">
+  </section>
+
+  <!-- 4. SEÇÃO GRÁFICA INTERATIVA (EVOLUÇÃO PATRIMONIAL VS INVESTIDO & COTAÇÃO VS DCA) -->
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Gráfico 1: Evolução Patrimonial & Posição vs Capital Aportado -->
+    <div class="card-executive p-5 flex flex-col justify-between h-[380px]">
+      <div class="flex items-center justify-between mb-2">
         <div>
-          <span class="text-[10px] text-slate-400 block">Drawdown ETH vs Média</span>
-          <span id="thermoDrawdown" class="font-bold text-amber-400">-6.18%</span>
+          <h2 class="text-sm font-bold text-white flex items-center gap-2">
+            <span>Evolução Patrimonial & Saldo</span>
+          </h2>
+          <p class="text-xs text-slate-400 font-mono mt-0.5">Valor de mercado da carteira comparado ao capital total investido.</p>
         </div>
-        <div class="text-right">
-          <span class="text-[10px] text-slate-400 block">Deságio vs Máxima</span>
-          <span id="thermoDesagio" class="font-bold text-slate-200">0.00%</span>
+      </div>
+      <div class="w-full h-[290px] relative">
+        <canvas id="chart-balance"></canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico 2: Cotação de Mercado com DCA & Toggle USD | ETH -->
+    <div class="card-executive p-5 flex flex-col justify-between h-[380px]">
+      <div class="flex items-center justify-between mb-2">
+        <div>
+          <h2 class="text-sm font-bold text-white flex items-center gap-2">
+            <span>Cotação cbETH & Paridade</span>
+          </h2>
+          <p class="text-xs text-slate-400 font-mono mt-0.5">Curva histórica comparada ao seu DCA / Paridade Beacon Chain.</p>
         </div>
+        <!-- Toggle USD | ETH -->
+        <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
+          <button id="btn-chart-usd" data-chart-mode="USD" class="px-2.5 py-1 text-xs font-bold font-mono bg-blue-600 text-white rounded transition active">USD</button>
+          <button id="btn-chart-eth" data-chart-mode="ETH" class="px-2.5 py-1 text-xs font-bold font-mono text-slate-400 hover:text-white rounded transition">ETH</button>
+        </div>
+      </div>
+      <div class="w-full h-[290px] relative">
+        <canvas id="chart-market"></canvas>
       </div>
     </div>
   </section>

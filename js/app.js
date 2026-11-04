@@ -100,6 +100,15 @@
     const avgPricePeriodUsd = calc.calculatePeriodAveragePrice(series, pos.spotCbEthUsd);
     const pnl = calc.calculatePnl(pos.spotCbEthUsd, dcaUsd, pos.balanceCbEth);
 
+    const totalInvestedUsd = transactions.reduce((acc, tx) => {
+      const tType = String(tx.type || '').toLowerCase();
+      const isEntry = !tType || tType === 'in' || tType === 'entrada' || tType === 'compra' || tType === 'buy';
+      if (isEntry) {
+        return acc + (tx.totalUsd || ((tx.amountCbEth || 0) * (tx.priceUsd || 0)));
+      }
+      return acc;
+    }, 0) || (pos.balanceCbEth * (dcaUsd > 0 ? dcaUsd : pos.spotCbEthUsd));
+
     const decomposed = calc.decomposePnl(
       pos.exchangeRate,
       1.0,
@@ -126,6 +135,7 @@
     return {
       dcaUsd,
       avgPricePeriodUsd,
+      totalInvestedUsd,
       pnl,
       decomposed,
       projections,
@@ -147,6 +157,22 @@
     const elPatSub = document.getElementById('cardPatrimonioSubtitle');
     if (elPatSub) {
       elPatSub.textContent = `cbETH (${pos.balanceCbEth.toFixed(6)}) + Gas ETH (${pos.balanceEthGas.toFixed(6)})`;
+    }
+    const elPatBadge = document.getElementById('kpiPatrimonioBadge');
+    if (elPatBadge) {
+      const pnlPct = metrics.pnl.pnlPercent;
+      const sign = pnlPct >= 0 ? '+' : '';
+      elPatBadge.textContent = `${sign}${pnlPct.toFixed(2)}% All Time`;
+      elPatBadge.className = `font-mono px-2 py-0.5 rounded-full text-xs font-semibold ${pnlPct >= 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`;
+    }
+    const elTotalInv = document.getElementById('cardTotalInvested');
+    if (elTotalInv) {
+      const totalInv = (metrics.totalInvestedUsd || 0) * mult;
+      elTotalInv.textContent = formatCurrency(totalInv, currency, 2);
+    }
+    const elSpotPrice = document.getElementById('cardSpotPrice');
+    if (elSpotPrice) {
+      elSpotPrice.textContent = formatCurrency(pos.spotCbEthUsd * mult, currency, 2);
     }
 
     // Card 2: DCA & Média do Período
@@ -474,7 +500,8 @@
           data.historicalSeries,
           state.currency,
           data.position.rateUsdBrl,
-          data.position.balanceCbEth
+          data.position.balanceCbEth,
+          data.transactions
         );
         charts.updateMarketChart(
           data.historicalSeries,
@@ -561,7 +588,8 @@
               state.data.historicalSeries,
               'USD',
               state.data.position.rateUsdBrl,
-              state.data.position.balanceCbEth
+              state.data.position.balanceCbEth,
+              state.data.transactions
             );
             charts.updateMarketChart(
               state.data.historicalSeries,
@@ -589,7 +617,8 @@
               state.data.historicalSeries,
               'BRL',
               state.data.position.rateUsdBrl,
-              state.data.position.balanceCbEth
+              state.data.position.balanceCbEth,
+              state.data.transactions
             );
             charts.updateMarketChart(
               state.data.historicalSeries,
