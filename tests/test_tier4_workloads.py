@@ -50,28 +50,11 @@ class TestTier4Workloads(unittest.TestCase):
         self.assertTrue(len(res["title"]) > 0, "Título da página deve estar preenchido")
 
     def test_t4_02_canonical_wallet_data_parity(self):
-        """T4.2: Paridade com dados reais da carteira de referência: saldo 0.020581 cbETH, 0.000244 ETH e 3 aportes de set/2026."""
+        """T4.2: Paridade com dados reais da carteira de referência: saldo 0.036161 cbETH, 0.000236 ETH e 5 aportes auditados."""
         res = eval_in_node(
             f"""
-            const getPos = (window.CbEth && window.CbEth.FallbackData && window.CbEth.FallbackData.getCanonicalPosition)
-                ? window.CbEth.FallbackData.getCanonicalPosition
-                : () => ({{
-                    address: '{REFERENCE_WALLET}',
-                    balanceCbEth: 0.020581,
-                    balanceEthGas: 0.000244,
-                    spotCbEthUsd: 2798.78,
-                    spotEthUsd: 2450.45,
-                    rateUsdBrl: 5.0980
-                }});
-            const getTxs = (window.CbEth && window.CbEth.FallbackData && window.CbEth.FallbackData.getCanonicalTransactions)
-                ? window.CbEth.FallbackData.getCanonicalTransactions
-                : () => [
-                    {{ hash: '{CANONICAL_TX_HASHES[0]}' }},
-                    {{ hash: '{CANONICAL_TX_HASHES[1]}' }},
-                    {{ hash: '{CANONICAL_TX_HASHES[2]}' }}
-                ];
-            const pos = getPos();
-            const txs = getTxs();
+            const pos = window.CbEth.FallbackData.getCanonicalPosition();
+            const txs = window.CbEth.FallbackData.getCanonicalTransactions();
             return {{
                 address: pos.address.toLowerCase(),
                 balanceCbEth: pos.balanceCbEth,
@@ -80,13 +63,13 @@ class TestTier4Workloads(unittest.TestCase):
                 txHashes: txs.map(t => t.hash.toLowerCase())
             }};
             """,
-            required_js_files=["fallback-data.js"] if check_file_exists("js/fallback-data.js") else None
+            required_js_files=["fallback-data.js"]
         )
         self.assertTrue(res["success"], f"Execution error: {res.get('error')}")
         self.assertEqual(res["result"]["address"], REFERENCE_WALLET.lower())
-        self.assertAlmostEqual(res["result"]["balanceCbEth"], 0.020581, places=6)
-        self.assertAlmostEqual(res["result"]["balanceEthGas"], 0.000244, places=6)
-        self.assertEqual(res["result"]["txCount"], 3)
+        self.assertAlmostEqual(res["result"]["balanceCbEth"], 0.036161, places=6)
+        self.assertAlmostEqual(res["result"]["balanceEthGas"], 0.000236, places=6)
+        self.assertEqual(res["result"]["txCount"], 5)
         for h in CANONICAL_TX_HASHES:
             self.assertIn(h.lower(), res["result"]["txHashes"])
 

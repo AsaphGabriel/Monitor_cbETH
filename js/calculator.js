@@ -15,6 +15,12 @@
     return Math.max(min, Math.min(max, val));
   }
 
+  function isEntryTransaction(tx) {
+    if (!tx) return false;
+    const tType = String(tx.type || '').toLowerCase().trim();
+    return !tType || tType === 'in' || tType === 'entrada' || tType === 'compra' || tType === 'buy';
+  }
+
   function calculateDca(transactions) {
     if (!Array.isArray(transactions) || transactions.length === 0) {
       return 0.0;
@@ -25,16 +31,13 @@
 
     for (const tx of transactions) {
       if (!tx) continue;
-      const tType = String(tx.type || '').toLowerCase();
-      const isEntry = tType === 'in' || tType === 'entrada' || tType === 'compra' || tType === 'buy';
-
-      if (isEntry && typeof tx.amountCbEth === 'number' && tx.amountCbEth > 0) {
+      if (isEntryTransaction(tx) && typeof tx.amountCbEth === 'number' && tx.amountCbEth > 0) {
         const qty = tx.amountCbEth;
         let spend = 0.0;
-        if (typeof tx.priceUsd === 'number' && tx.priceUsd > 0) {
-          spend = qty * tx.priceUsd;
-        } else if (typeof tx.totalUsd === 'number' && tx.totalUsd > 0) {
+        if (typeof tx.totalUsd === 'number' && tx.totalUsd > 0) {
           spend = tx.totalUsd;
+        } else if (typeof tx.priceUsd === 'number' && tx.priceUsd > 0) {
+          spend = qty * tx.priceUsd;
         }
         totalQty += qty;
         totalSpend += spend;
@@ -46,6 +49,44 @@
     }
 
     return safeDivide(totalSpend, totalQty, 0.0);
+  }
+
+  function calculateEntryExchangeRate(transactions, fallbackEr = 1.14019) {
+    if (!Array.isArray(transactions) || transactions.length === 0) {
+      return fallbackEr;
+    }
+
+    let totalQty = 0.0;
+    let weightedErSum = 0.0;
+    const nowMs = Date.now();
+    const dailyRateAccrual = 0.0310 / 365;
+
+    for (const tx of transactions) {
+      if (!tx || !isEntryTransaction(tx)) continue;
+      const qty = Number(tx.amountCbEth) || 0.0;
+      if (qty <= 0) continue;
+
+      let txEr = Number(tx.entryExchangeRate) || 0.0;
+      if (txEr <= 0) {
+        const tsStr = String(tx.timestamp || '').trim();
+        const txMs = tsStr ? Date.parse(tsStr.replace(' ', 'T') + (tsStr.includes('Z') ? '' : 'Z')) : NaN;
+        if (!isNaN(txMs) && txMs < nowMs) {
+          const daysHeld = (nowMs - txMs) / 86400000;
+          txEr = Math.max(1.0, fallbackEr * (1 - daysHeld * dailyRateAccrual));
+        } else {
+          txEr = fallbackEr;
+        }
+      }
+
+      totalQty += qty;
+      weightedErSum += qty * txEr;
+    }
+
+    if (totalQty <= 0) {
+      return fallbackEr;
+    }
+
+    return safeDivide(weightedErSum, totalQty, fallbackEr);
   }
 
   function calculatePeriodAveragePrice(series, spotFallback = 0.0) {
@@ -90,28 +131,47 @@
     };
   }
 
-  function decomposePnl(spotEr, initEr, spotPrice, initPrice, balance, exchangeRateUsdBrl) {
-    const sEr = Number(spotEr) || 1.14215;
-    const iEr = Number(initEr) || 1.00000;
+  function decomposePnl(spotEr, initEr, spotPrice, initPrice, balance, exchangeRateUsdBrl, spotEthOverride = null) {
+    const sEr = Number(spotEr) > 0 ? Number(spotEr) : 1.14344;
+    const iEr = Number(initEr) > 0 ? Number(initEr) : sEr;
     const sPrice = Number(spotPrice) || 0.0;
-    const iPrice = Number(initPrice) || sPrice;
+    const iPrice = Number(initPrice) > 0 ? Number(initPrice) : sPrice;
     const bal = Number(balance) || 0.0;
-    const fx = Number(exchangeRateUsdBrl) || 5.0980;
+    const fx = Number(exchangeRateUsdBrl) > 0 ? Number(exchangeRateUsdBrl) : 5.4687;
+
+    if (bal <= 0 || sPrice <= 0) {
+      return {
+        stakingYieldEth: 0.0,
+        stakingYieldUsd: 0.0,
+        stakingYieldBrl: 0.0,
+        lucroStakingGarantidoBrl: 0.0,
+        marketChangeUsd: 0.0,
+        marketChangeBrl: 0.0,
+        netResultUsd: 0.0,
+        netResultBrl: 0.0,
+        status: 'Lucro Consolidado'
+      };
+    }
+
+    const totalPnlUsd = (sPrice - iPrice) * bal;
+    const totalPnlBrl = totalPnlUsd * fx;
 
     const rendAcum = Math.max(0, sEr - iEr);
     const stakingYieldEth = bal * rendAcum;
-    const ethSpotUsd = sEr > 0 ? sPrice / sEr : 0.0;
+    const ethSpotUsd = (typeof spotEthOverride === 'number' && spotEthOverride > 0)
+      ? spotEthOverride
+      : (sEr > 0 ? sPrice / sEr : 0.0);
+
     const stakingYieldUsd = stakingYieldEth * ethSpotUsd;
     const stakingYieldBrl = stakingYieldUsd * fx;
+    const lucroStakingGarantidoBrl = stakingYieldBrl;
 
-    const baseCustoBrl = bal * 1000 * fx;
-    const lucroStakingGarantidoBrl = baseCustoBrl * rendAcum;
-
-    const marketChangeUsd = (sPrice - iPrice) * bal;
+    const marketChangeUsd = totalPnlUsd - stakingYieldUsd;
     const marketChangeBrl = marketChangeUsd * fx;
 
-    const netResultBrl = lucroStakingGarantidoBrl + marketChangeBrl;
-    const status = netResultBrl >= 0 ? 'Lucro Consolidado' : 'Em Recuperação (Staking Ativo)';
+    const netResultUsd = totalPnlUsd;
+    const netResultBrl = totalPnlBrl;
+    const status = netResultUsd >= 0 ? 'Lucro Consolidado' : 'Em Recuperação (Staking Ativo)';
 
     return {
       stakingYieldEth: isFinite(stakingYieldEth) ? stakingYieldEth : 0.0,
@@ -120,6 +180,7 @@
       lucroStakingGarantidoBrl: isFinite(lucroStakingGarantidoBrl) ? lucroStakingGarantidoBrl : 0.0,
       marketChangeUsd: isFinite(marketChangeUsd) ? marketChangeUsd : 0.0,
       marketChangeBrl: isFinite(marketChangeBrl) ? marketChangeBrl : 0.0,
+      netResultUsd: isFinite(netResultUsd) ? netResultUsd : 0.0,
       netResultBrl: isFinite(netResultBrl) ? netResultBrl : 0.0,
       status
     };
@@ -128,7 +189,7 @@
   function calculateStakingProjections(balance, spotPriceUsd, rateUsdBrl) {
     const b = Number(balance) || 0.0;
     const p = Number(spotPriceUsd) || 0.0;
-    const r = Number(rateUsdBrl) || 5.0980;
+    const r = Number(rateUsdBrl) || 5.4687;
     const apy = 0.0310;
 
     const patUsd = b * p;
@@ -190,7 +251,9 @@
   const Calculator = {
     safeDivide,
     clamp,
+    isEntryTransaction,
     calculateDca,
+    calculateEntryExchangeRate,
     calculatePeriodAveragePrice,
     calculatePnl,
     decomposePnl,

@@ -3,6 +3,8 @@
 
   global.CbEth = global.CbEth || {};
 
+  let requestCounter = 0;
+
   const state = {
     address: '0xc4cfde467bc76d0d6df365584648371b1954b154',
     timeframe: '30d',
@@ -40,7 +42,18 @@
   function formatCurrency(val, currency = 'USD', decimals = 2) {
     const num = Number(val) || 0.0;
     const prefix = currency === 'BRL' ? 'R$ ' : '$';
-    return prefix + num.toLocaleString('pt-BR', {
+    const sign = num < 0 ? '-' : '';
+    return sign + prefix + Math.abs(num).toLocaleString('pt-BR', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals
+    });
+  }
+
+  function formatSignedCurrency(val, currency = 'USD', decimals = 2) {
+    const num = Number(val) || 0.0;
+    const prefix = currency === 'BRL' ? 'R$ ' : '$';
+    const sign = num >= 0 ? '+' : '-';
+    return sign + prefix + Math.abs(num).toLocaleString('pt-BR', {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals
     });
@@ -51,22 +64,36 @@
     return num.toFixed(decimals) + ' ' + symbol;
   }
 
+  function parseTxEpochSeconds(tx) {
+    if (!tx || !tx.timestamp) return NaN;
+    const raw = String(tx.timestamp).trim().replace(' ', 'T');
+    const hasTz = raw.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(raw);
+    const ms = Date.parse(hasTz ? raw : raw + 'Z');
+    return isNaN(ms) ? NaN : Math.floor(ms / 1000);
+  }
+
   function filterTransactionsByTimeframe(transactions, timeframe) {
     if (!Array.isArray(transactions) || transactions.length === 0) return [];
-    if (timeframe === 'all' || timeframe === '90d') return transactions.slice();
+    if (timeframe === 'all') return transactions.slice();
 
-    const nowEpoch = 1792065600; // 15/10/2026 12:00:00 UTC
+    let maxTxEpoch = 0;
+    for (const tx of transactions) {
+      const ep = parseTxEpochSeconds(tx);
+      if (!isNaN(ep) && ep > maxTxEpoch) maxTxEpoch = ep;
+    }
+
+    const nowEpoch = Math.max(Math.floor(Date.now() / 1000), maxTxEpoch);
     let days = 30;
     if (timeframe === '24h') days = 1;
     else if (timeframe === '7d') days = 7;
     else if (timeframe === '14d') days = 14;
     else if (timeframe === '30d') days = 30;
+    else if (timeframe === '90d') days = 90;
 
     const cutoffEpoch = nowEpoch - days * 86400;
 
     return transactions.filter(tx => {
-      if (!tx.timestamp) return true;
-      const txEpoch = Math.floor(new Date(tx.timestamp.replace(' ', 'T') + 'Z').getTime() / 1000);
+      const txEpoch = parseTxEpochSeconds(tx);
       if (isNaN(txEpoch)) return true;
       return txEpoch >= cutoffEpoch;
     });
@@ -80,8 +107,8 @@
         const volB = b.totalUsd || (b.amountCbEth * (b.priceUsd || 0));
         return sortAsc ? volA - volB : volB - volA;
       } else {
-        const timeA = new Date(a.timestamp || 0).getTime();
-        const timeB = new Date(b.timestamp || 0).getTime();
+        const timeA = parseTxEpochSeconds(a) || 0;
+        const timeB = parseTxEpochSeconds(b) || 0;
         return sortAsc ? timeA - timeB : timeB - timeA;
       }
     });
@@ -99,6 +126,9 @@
     const dcaUsd = calc.calculateDca(transactions);
     const avgPricePeriodUsd = calc.calculatePeriodAveragePrice(series, pos.spotCbEthUsd);
     const pnl = calc.calculatePnl(pos.spotCbEthUsd, dcaUsd, pos.balanceCbEth);
+    const entryEr = calc.calculateEntryExchangeRate
+      ? calc.calculateEntryExchangeRate(transactions, 1.14062)
+      : 1.14062;
 
     const totalInvestedUsd = transactions.reduce((acc, tx) => {
       const tType = String(tx.type || '').toLowerCase();
@@ -109,13 +139,15 @@
       return acc;
     }, 0) || (pos.balanceCbEth * (dcaUsd > 0 ? dcaUsd : pos.spotCbEthUsd));
 
+    const effectiveProtocolEr = pos.protocolExchangeRate || pos.exchangeRate;
     const decomposed = calc.decomposePnl(
-      pos.exchangeRate,
-      1.0,
+      effectiveProtocolEr,
+      entryEr,
       pos.spotCbEthUsd,
-      avgPricePeriodUsd,
+      dcaUsd,
       pos.balanceCbEth,
-      pos.rateUsdBrl
+      pos.rateUsdBrl,
+      pos.spotEthUsd
     );
 
     const projections = calc.calculateStakingProjections(
@@ -126,14 +158,16 @@
 
     const ethSeries = series.map(p => ({ price: p.priceEthUsd }));
     const avgEth = calc.calculatePeriodAveragePrice(ethSeries, pos.spotEthUsd);
-    const maxEr = series.length > 0
-      ? Math.max(...series.map(p => p.exchangeRate || 1.14215), 1.14215)
-      : 1.14215;
+    const maxEr = Math.max(
+      effectiveProtocolEr || 1.14344,
+      ...(series.length > 0 ? series.map(p => p.exchangeRate || 0) : [1.14344])
+    );
 
     const thermometer = calc.calculateThermometer(pos.spotEthUsd, avgEth, pos.exchangeRate, maxEr);
 
     return {
       dcaUsd,
+      entryEr,
       avgPricePeriodUsd,
       totalInvestedUsd,
       pnl,
@@ -141,6 +175,26 @@
       projections,
       thermometer
     };
+  }
+
+  function renderStatusFooter(data) {
+    const elFooterTs = document.getElementById('footerTimestamp');
+    if (elFooterTs) {
+      const nowIso = new Date().toISOString().replace('T', ' ').substring(0, 16);
+      const modeLabel = data?.isFallback ? 'Snapshot Auditado' : 'Tempo Real RPC + DeFiLlama';
+      elFooterTs.textContent = `Última Atualização: ${nowIso} UTC (${modeLabel})`;
+    }
+
+    const elBadge = document.getElementById('networkBadge');
+    if (elBadge) {
+      if (data?.isFallback) {
+        elBadge.className = 'flex items-center gap-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20';
+        elBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>Cache Auditado';
+      } else {
+        elBadge.className = 'flex items-center gap-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+        elBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>On-Chain';
+      }
+    }
   }
 
   function renderKpis(data, metrics, currency) {
@@ -151,7 +205,7 @@
     // Card 1: Patrimônio Total
     const elPatTotal = document.getElementById('cardPatrimonioTotal') || document.getElementById('patrimonio-total');
     if (elPatTotal) {
-      const val = (pos.patrimonioTotalUsd || (pos.balanceCbEth * pos.spotCbEthUsd)) * mult;
+      const val = (pos.patrimonioTotalUsd ?? (pos.balanceCbEth * pos.spotCbEthUsd)) * mult;
       elPatTotal.textContent = formatCurrency(val, currency, 2);
     }
     const elPatSub = document.getElementById('cardPatrimonioSubtitle');
@@ -175,7 +229,7 @@
       elSpotPrice.textContent = formatCurrency(pos.spotCbEthUsd * mult, currency, 2);
     }
 
-    // Card 2: DCA & Média do Período
+    // Card 2 / 3: DCA & Média do Período
     const elDca = document.getElementById('cardDca') || document.getElementById('dca-price');
     if (elDca) {
       const val = metrics.dcaUsd * mult;
@@ -190,13 +244,14 @@
       elAvgPeriod.textContent = formatCurrency(val, currency, 2);
     }
 
-    // Card 3: Exchange Rate
+    // Card 4: Exchange Rate (Protocol Beacon Chain Rate, with market parity fallback)
     const elEr = document.getElementById('cardExchangeRate') || document.getElementById('exchange-rate');
     if (elEr) {
-      elEr.textContent = pos.exchangeRate.toFixed(5);
+      const displayEr = pos.protocolExchangeRate || pos.exchangeRate;
+      elEr.textContent = displayEr.toFixed(5);
     }
 
-    // Card 4: Staking Yield
+    // Staking Yield Real desde entrada
     const elYield = document.getElementById('cardStakingYield') || document.getElementById('staking-yield');
     if (elYield) {
       elYield.textContent = `+${metrics.decomposed.stakingYieldEth.toFixed(6)} ETH`;
@@ -204,10 +259,10 @@
     const elYieldFiat = document.getElementById('cardStakingYieldFiat');
     if (elYieldFiat) {
       const yieldFiat = (metrics.decomposed.stakingYieldUsd || 0) * mult;
-      elYieldFiat.textContent = `≈ ${formatCurrency(yieldFiat, currency, 2)}`;
+      elYieldFiat.textContent = `~ ${formatCurrency(yieldFiat, currency, 2)}`;
     }
 
-    // Painel 1: P&L
+    // Painel P&L All Time
     const elPnlMonetary = document.getElementById('pnlMonetary') || document.getElementById('pnl-monetary');
     const elPnlPercent = document.getElementById('pnlPercent') || document.getElementById('pnl-percent');
     const elPnlBadge = document.getElementById('pnlBadge') || document.getElementById('pnl-badge');
@@ -217,9 +272,8 @@
 
     if (elPnlMonetary) {
       const pnlMon = metrics.pnl.pnlUsd * mult;
-      const sign = pnlMon >= 0 ? '+' : '';
-      elPnlMonetary.textContent = sign + formatCurrency(pnlMon, currency, 2);
-      elPnlMonetary.className = `text-2xl font-extrabold font-mono ${pnlMon >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+      elPnlMonetary.textContent = formatSignedCurrency(pnlMon, currency, 2);
+      elPnlMonetary.className = `text-3xl font-extrabold font-mono ${pnlMon >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
     }
     if (elPnlPercent) {
       const sign = metrics.pnl.pnlPercent >= 0 ? '+' : '';
@@ -238,35 +292,34 @@
     }
     if (elPnlStaking) {
       const stVal = (metrics.decomposed.stakingYieldUsd || 0) * mult;
-      elPnlStaking.textContent = `+${formatCurrency(stVal, currency, 2)}`;
+      elPnlStaking.textContent = formatSignedCurrency(stVal, currency, 2);
     }
     if (elPnlMarket) {
       const mktVal = (metrics.decomposed.marketChangeUsd || 0) * mult;
-      const sign = mktVal >= 0 ? '+' : '';
-      elPnlMarket.textContent = sign + formatCurrency(mktVal, currency, 2);
+      elPnlMarket.textContent = formatSignedCurrency(mktVal, currency, 2);
       elPnlMarket.className = `font-bold ${mktVal >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
     }
 
-    // Painel 2: Staking & APY
+    // Painel Staking & APY
     const elApy = document.getElementById('stakingApy');
-    if (elApy) elApy.textContent = '3.10%';
+    if (elApy) elApy.textContent = '3.10% APY';
     const elDaily = document.getElementById('stakingDaily');
     const elMonthly = document.getElementById('stakingMonthly');
     const elAnnual = document.getElementById('stakingAnnual');
     if (elDaily) {
       const val = (currency === 'BRL' ? metrics.projections.dailyBrl : metrics.projections.dailyUsd);
-      elDaily.textContent = `+${formatCurrency(val, currency, 2)}`;
+      elDaily.textContent = formatSignedCurrency(val, currency, 2);
     }
     if (elMonthly) {
       const val = (currency === 'BRL' ? metrics.projections.monthlyBrl : metrics.projections.monthlyUsd);
-      elMonthly.textContent = `+${formatCurrency(val, currency, 2)}`;
+      elMonthly.textContent = formatSignedCurrency(val, currency, 2);
     }
     if (elAnnual) {
       const val = (currency === 'BRL' ? metrics.projections.annualBrl : metrics.projections.annualUsd);
-      elAnnual.textContent = `+${formatCurrency(val, currency, 2)}`;
+      elAnnual.textContent = formatSignedCurrency(val, currency, 2);
     }
 
-    // Painel 3: Termômetro Decisório
+    // Painel Termômetro Decisório
     const elScore = document.getElementById('thermoScore');
     const elSignal = document.getElementById('thermoSignal');
     const elSignalContainer = document.getElementById('thermoSignalContainer');
@@ -309,6 +362,8 @@
     if (elStatUsdBrl) {
       elStatUsdBrl.textContent = `R$ ${pos.rateUsdBrl.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
     }
+
+    renderStatusFooter(data);
   }
 
   function renderLedger(data, timeframe, sortKey, sortAsc, currency) {
@@ -323,16 +378,26 @@
     const filtered = filterTransactionsByTimeframe(txs, timeframe);
     const sorted = sortTransactions(filtered, sortKey, sortAsc);
 
+    const elCountBadge = document.getElementById('ledgerCountBadge');
+    if (elCountBadge) {
+      elCountBadge.textContent = timeframe === 'all'
+        ? `${txs.length} transações`
+        : `${filtered.length} no período / ${txs.length} total`;
+    }
+
     if (sorted.length === 0) {
       const tr = document.createElement('tr');
       tr.id = 'empty-ledger-row';
-      tr.innerHTML = `<td colspan="6" class="text-center py-6 text-slate-400 font-mono text-xs">Nenhuma movimentação no período selecionado.</td>`;
+      const hint = txs.length > 0
+        ? `Nenhuma movimentação na janela ${timeframe}. Selecione 90d ou Tudo para ver as ${txs.length} transações históricas.`
+        : 'Nenhuma movimentação encontrada para esta carteira.';
+      tr.innerHTML = `<td colspan="6" class="text-center py-6 text-slate-400 font-mono text-xs">${hint}</td>`;
       tbody.appendChild(tr);
       return;
     }
 
     const icons = global.CbEth.Icons;
-    const rateUsdBrl = data.position?.rateUsdBrl || 5.0980;
+    const rateUsdBrl = data.position?.rateUsdBrl || 5.4687;
     const mult = currency === 'BRL' ? rateUsdBrl : 1.0;
 
     for (const tx of sorted) {
@@ -343,7 +408,8 @@
         ? tx.hash.substring(0, 6) + '...' + tx.hash.substring(tx.hash.length - 4)
         : tx.hash || '';
 
-      const isEntry = tx.type === 'in' || tx.type === 'entrada' || tx.type === 'compra' || tx.type === 'buy';
+      const tType = String(tx.type || 'in').toLowerCase();
+      const isEntry = !tType || tType === 'in' || tType === 'entrada' || tType === 'compra' || tType === 'buy';
       const badgeCls = isEntry
         ? 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
         : 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-500 border border-rose-500/20';
@@ -405,6 +471,28 @@
     }
   }
 
+  function renderCharts(data, metrics) {
+    const charts = global.CbEth.Charts;
+    if (!charts || !data || !data.position) return;
+
+    charts.updateBalanceChart(
+      data.historicalSeries,
+      state.currency,
+      data.position.rateUsdBrl,
+      data.position.balanceCbEth,
+      data.transactions
+    );
+    charts.updateMarketChart(
+      data.historicalSeries,
+      state.chartMode,
+      state.currency,
+      data.position.rateUsdBrl,
+      metrics?.dcaUsd,
+      data.transactions,
+      metrics?.entryEr
+    );
+  }
+
   function updateTimeframeButtons(activeTimeframe) {
     const buttons = document.querySelectorAll('#timeframeFilter button, [data-timeframe]');
     buttons.forEach(btn => {
@@ -434,8 +522,8 @@
   }
 
   function updateChartModeButtons(activeMode) {
-    const btnUsd = document.getElementById('btnChartModeUsd') || document.querySelector('[data-chart-mode="USD"]');
-    const btnEth = document.getElementById('btnChartModeEth') || document.querySelector('[data-chart-mode="ETH"]');
+    const btnUsd = document.getElementById('btnChartModeUsd') || document.getElementById('btn-chart-usd') || document.querySelector('[data-chart-mode="USD"]');
+    const btnEth = document.getElementById('btnChartModeEth') || document.getElementById('btn-chart-eth') || document.querySelector('[data-chart-mode="ETH"]');
 
     if (btnUsd && btnEth) {
       if (activeMode === 'USD') {
@@ -445,6 +533,60 @@
         btnEth.className = 'px-2.5 py-1 text-xs font-bold font-mono bg-purple-600 text-white rounded transition active';
         btnUsd.className = 'px-2.5 py-1 text-xs font-bold font-mono text-slate-400 hover:text-white rounded transition';
       }
+    }
+  }
+
+  function hydrateInitialSnapshot() {
+    const fb = global.CbEth.FallbackData;
+    if (!fb) return;
+    const pos = fb.getCanonicalPosition();
+    const txs = fb.getCanonicalTransactions();
+    const series = fb.getHistoricalSeries(state.timeframe, pos.address);
+    const snapshot = {
+      position: pos,
+      transactions: txs,
+      historicalSeries: series,
+      isFallback: true,
+      isCanonical: true
+    };
+    state.data = snapshot;
+    state.metrics = calculateMetrics(snapshot, state.currency);
+    renderKpis(state.data, state.metrics, state.currency);
+    renderLedger(state.data, state.timeframe, state.sortKey, state.sortAsc, state.currency);
+    renderCharts(state.data, state.metrics);
+  }
+
+  async function switchTimeframe(tf) {
+    const api = global.CbEth.Api;
+    if (!api) return;
+
+    const sanitized = api.sanitizeTimeframe(tf);
+    state.timeframe = sanitized;
+    updateTimeframeButtons(sanitized);
+
+    if (!state.data || state.isLoading) {
+      return loadData(false);
+    }
+
+    const reqId = ++requestCounter;
+    try {
+      const spotObj = {
+        cbEthUsd: state.data.position.spotCbEthUsd,
+        ethUsd: state.data.position.spotEthUsd,
+        exchangeRate: state.data.position.exchangeRate,
+        protocolExchangeRate: state.data.position.protocolExchangeRate,
+        source: state.data.isFallback ? 'fallback' : 'api'
+      };
+      const nextSeries = await api.fetchHistoricalSeries(sanitized, state.address, spotObj, false);
+      if (reqId !== requestCounter) return;
+
+      state.data = Object.assign({}, state.data, { historicalSeries: nextSeries });
+      state.metrics = calculateMetrics(state.data, state.currency);
+      renderKpis(state.data, state.metrics, state.currency);
+      renderLedger(state.data, state.timeframe, state.sortKey, state.sortAsc, state.currency);
+      renderCharts(state.data, state.metrics);
+    } catch (err) {
+      console.warn('Erro ao alternar janela temporal:', err.message);
     }
   }
 
@@ -479,38 +621,40 @@
 
     state.address = address;
     state.isLoading = true;
+    const reqId = ++requestCounter;
+    const requestedTimeframe = state.timeframe;
 
-    if (btnUpdate) {
+    if (btnUpdate && forceRefresh) {
       btnUpdate.setAttribute('disabled', 'true');
       const textSpan = btnUpdate.querySelector('span:not(#btnUpdateIcon)') || btnUpdate;
       if (textSpan) textSpan.textContent = 'Buscando...';
     }
 
     try {
-      const data = await api.loadWalletData(state.address, state.timeframe, forceRefresh);
+      const data = await api.loadWalletData(state.address, requestedTimeframe, forceRefresh);
+      if (reqId !== requestCounter) {
+        // If timeframe changed while wallet load was in flight, align series to current state.timeframe
+        if (state.address.toLowerCase() === address.toLowerCase()) {
+          const spotObj = {
+            cbEthUsd: data.position.spotCbEthUsd,
+            ethUsd: data.position.spotEthUsd,
+            exchangeRate: data.position.exchangeRate,
+            protocolExchangeRate: data.position.protocolExchangeRate,
+            source: data.isFallback ? 'fallback' : 'api'
+          };
+          const alignedSeries = await api.fetchHistoricalSeries(state.timeframe, state.address, spotObj, false);
+          data.historicalSeries = alignedSeries;
+        } else {
+          return;
+        }
+      }
+
       state.data = data;
       state.metrics = calculateMetrics(data, state.currency);
 
       renderKpis(state.data, state.metrics, state.currency);
       renderLedger(state.data, state.timeframe, state.sortKey, state.sortAsc, state.currency);
-
-      const charts = global.CbEth.Charts;
-      if (charts) {
-        charts.updateBalanceChart(
-          data.historicalSeries,
-          state.currency,
-          data.position.rateUsdBrl,
-          data.position.balanceCbEth,
-          data.transactions
-        );
-        charts.updateMarketChart(
-          data.historicalSeries,
-          state.chartMode,
-          state.currency,
-          data.position.rateUsdBrl,
-          state.metrics?.dcaUsd
-        );
-      }
+      renderCharts(state.data, state.metrics);
     } catch (err) {
       console.warn('Erro ao carregar dados on-chain:', err.message);
     } finally {
@@ -564,9 +708,7 @@
       btn.addEventListener('click', () => {
         let tf = btn.getAttribute('data-timeframe') || btn.textContent.trim().toLowerCase();
         if (tf === 'tudo') tf = 'all';
-        state.timeframe = tf;
-        updateTimeframeButtons(tf);
-        loadData(false);
+        switchTimeframe(tf);
       });
     });
 
@@ -582,23 +724,7 @@
         if (state.data && state.metrics) {
           renderKpis(state.data, state.metrics, 'USD');
           renderLedger(state.data, state.timeframe, state.sortKey, state.sortAsc, 'USD');
-          const charts = global.CbEth.Charts;
-          if (charts) {
-            charts.updateBalanceChart(
-              state.data.historicalSeries,
-              'USD',
-              state.data.position.rateUsdBrl,
-              state.data.position.balanceCbEth,
-              state.data.transactions
-            );
-            charts.updateMarketChart(
-              state.data.historicalSeries,
-              state.chartMode,
-              'USD',
-              state.data.position.rateUsdBrl,
-              state.metrics.dcaUsd
-            );
-          }
+          renderCharts(state.data, state.metrics);
         }
       });
     }
@@ -611,30 +737,14 @@
         if (state.data && state.metrics) {
           renderKpis(state.data, state.metrics, 'BRL');
           renderLedger(state.data, state.timeframe, state.sortKey, state.sortAsc, 'BRL');
-          const charts = global.CbEth.Charts;
-          if (charts) {
-            charts.updateBalanceChart(
-              state.data.historicalSeries,
-              'BRL',
-              state.data.position.rateUsdBrl,
-              state.data.position.balanceCbEth,
-              state.data.transactions
-            );
-            charts.updateMarketChart(
-              state.data.historicalSeries,
-              state.chartMode,
-              'BRL',
-              state.data.position.rateUsdBrl,
-              state.metrics.dcaUsd
-            );
-          }
+          renderCharts(state.data, state.metrics);
         }
       });
     }
 
     // 5. Chart 2 Mode Toggle (USD | ETH)
-    const btnChartUsd = document.getElementById('btnChartModeUsd') || document.querySelector('[data-chart-mode="USD"]');
-    const btnChartEth = document.getElementById('btnChartModeEth') || document.querySelector('[data-chart-mode="ETH"]');
+    const btnChartUsd = document.getElementById('btnChartModeUsd') || document.getElementById('btn-chart-usd') || document.querySelector('[data-chart-mode="USD"]');
+    const btnChartEth = document.getElementById('btnChartModeEth') || document.getElementById('btn-chart-eth') || document.querySelector('[data-chart-mode="ETH"]');
 
     if (btnChartUsd) {
       btnChartUsd.addEventListener('click', () => {
@@ -646,7 +756,9 @@
             'USD',
             state.currency,
             state.data.position.rateUsdBrl,
-            state.metrics?.dcaUsd
+            state.metrics?.dcaUsd,
+            state.data.transactions,
+            state.metrics?.entryEr
           );
         }
       });
@@ -662,7 +774,9 @@
             'ETH',
             state.currency,
             state.data.position.rateUsdBrl,
-            state.metrics?.dcaUsd
+            state.metrics?.dcaUsd,
+            state.data.transactions,
+            state.metrics?.entryEr
           );
         }
       });
@@ -721,6 +835,7 @@
     if (global.CbEth.Charts) {
       global.CbEth.Charts.initCharts('chart-balance', 'chart-market');
     }
+    hydrateInitialSnapshot();
     setupEvents();
     loadData(false);
   }
@@ -737,10 +852,14 @@
     state,
     init,
     loadData,
+    switchTimeframe,
+    calculateMetrics,
+    filterTransactionsByTimeframe,
     renderKpis,
     renderLedger,
     copyToClipboard,
     formatCurrency,
+    formatSignedCurrency,
     formatCrypto
   };
 

@@ -4,81 +4,109 @@
   global.CbEth = global.CbEth || {};
 
   const CANONICAL_WALLET = '0xc4cfde467bc76d0d6df365584648371b1954b154';
+  const CANONICAL_LAST_SYNCED_BLOCK = 53602055;
 
   const CANONICAL_POSITION = {
     address: CANONICAL_WALLET,
     network: 'Base',
-    balanceCbEth: 0.020581,
-    balanceEthGas: 0.000244,
-    spotCbEthUsd: 2798.78,
-    spotEthUsd: 2450.45,
-    exchangeRate: 1.14215,
-    rateUsdBrl: 5.0980,
-    patrimonioCbEthEth: 0.023506,
-    patrimonioCbEthUsd: 57.60,
-    patrimonioCbEthBrl: 293.65,
-    patrimonioTotalUsd: 58.20,
-    patrimonioTotalBrl: 296.70
+    balanceCbEth: 0.036161,
+    balanceEthGas: 0.000236,
+    spotCbEthUsd: 2542.42,
+    spotEthUsd: 2230.93,
+    exchangeRate: 1.13962,
+    protocolExchangeRate: 1.14344,
+    rateUsdBrl: 5.4687,
+    patrimonioCbEthEth: 0.041210,
+    patrimonioCbEthUsd: 91.94,
+    patrimonioCbEthBrl: 502.79,
+    patrimonioTotalUsd: 92.47,
+    patrimonioTotalBrl: 505.69
   };
 
   const CANONICAL_TRANSACTIONS = [
     {
       hash: '0x2fd9b33a75bb78b3fe0b2d3989c9ee09971912957fbb3c70f6120e7d5830eb99',
+      blockNumber: 50840112,
       timestamp: '2026-09-01 15:49:19',
       type: 'in',
       amountCbEth: 0.00877126,
       priceUsd: 2788.55,
-      totalUsd: 24.46
+      totalUsd: 24.46,
+      entryExchangeRate: 1.13810
     },
     {
       hash: '0xb5d2d0b5ff8512e9b0d62a342416ee3c2ef3be5045479cb2be4aa1796ca8ef8d',
+      blockNumber: 51412540,
       timestamp: '2026-09-14 21:41:01',
       type: 'in',
       amountCbEth: 0.00512007,
       priceUsd: 2900.99,
-      totalUsd: 14.85
+      totalUsd: 14.85,
+      entryExchangeRate: 1.13934
     },
     {
       hash: '0x4a9d7bdfaa373d523624e7561cf05db69fa7f4f6b57ae1ec9b8a07c3fb3c6b25',
+      blockNumber: 52050210,
       timestamp: '2026-09-29 15:45:05',
       type: 'in',
       amountCbEth: 0.00668956,
       priceUsd: 3059.08,
-      totalUsd: 20.46
+      totalUsd: 20.46,
+      entryExchangeRate: 1.14003
+    },
+    {
+      hash: '0x89244b9b29dfdd97d00a8f8da97850785e5ca1d8898b2b1d31ec526796faf8f4',
+      blockNumber: 53110937,
+      timestamp: '2026-10-26 10:40:21',
+      type: 'in',
+      amountCbEth: 0.00549525,
+      priceUsd: 2663.31,
+      totalUsd: 14.64,
+      entryExchangeRate: 1.14212
+    },
+    {
+      hash: '0x688291461a746fb348a520ec1ccfe59e6c8ea5d6135792320c274f8c3dff0477',
+      blockNumber: 53602055,
+      timestamp: '2026-11-05 20:33:06',
+      type: 'in',
+      amountCbEth: 0.01008449,
+      priceUsd: 2566.92,
+      totalUsd: 25.89,
+      entryExchangeRate: 1.14344
     }
   ];
 
   const CANONICAL_SERIES_30D = [
-    { date: '2026-09-16', priceEthUsd: 2400.39, priceCbEthUsd: 2735.31, exchangeRate: 1.13953 },
-    { date: '2026-09-17', priceEthUsd: 2432.20, priceCbEthUsd: 2770.48, exchangeRate: 1.13908 },
-    { date: '2026-09-18', priceEthUsd: 2514.30, priceCbEthUsd: 2866.27, exchangeRate: 1.13999 },
-    { date: '2026-09-19', priceEthUsd: 2643.27, priceCbEthUsd: 3011.54, exchangeRate: 1.13932 },
-    { date: '2026-09-20', priceEthUsd: 2573.89, priceCbEthUsd: 2933.66, exchangeRate: 1.13978 },
-    { date: '2026-09-21', priceEthUsd: 2716.31, priceCbEthUsd: 3093.03, exchangeRate: 1.13869 },
-    { date: '2026-09-22', priceEthUsd: 2738.83, priceCbEthUsd: 3121.64, exchangeRate: 1.13977 },
-    { date: '2026-09-23', priceEthUsd: 2731.17, priceCbEthUsd: 3112.86, exchangeRate: 1.13975 },
-    { date: '2026-09-24', priceEthUsd: 2636.07, priceCbEthUsd: 3003.17, exchangeRate: 1.13926 },
-    { date: '2026-09-25', priceEthUsd: 2711.45, priceCbEthUsd: 3093.60, exchangeRate: 1.14094 },
-    { date: '2026-09-26', priceEthUsd: 2687.47, priceCbEthUsd: 3063.65, exchangeRate: 1.13997 },
-    { date: '2026-09-27', priceEthUsd: 2712.25, priceCbEthUsd: 3094.58, exchangeRate: 1.14096 },
-    { date: '2026-09-28', priceEthUsd: 2648.13, priceCbEthUsd: 3018.89, exchangeRate: 1.14001 },
-    { date: '2026-09-29', priceEthUsd: 2713.22, priceCbEthUsd: 3093.16, exchangeRate: 1.14003 },
-    { date: '2026-09-30', priceEthUsd: 2692.04, priceCbEthUsd: 3071.00, exchangeRate: 1.14077 },
-    { date: '2026-10-01', priceEthUsd: 2687.06, priceCbEthUsd: 3068.36, exchangeRate: 1.14190 },
-    { date: '2026-10-02', priceEthUsd: 2743.27, priceCbEthUsd: 3129.42, exchangeRate: 1.14076 },
-    { date: '2026-10-03', priceEthUsd: 2682.48, priceCbEthUsd: 3059.21, exchangeRate: 1.14044 },
-    { date: '2026-10-04', priceEthUsd: 2705.38, priceCbEthUsd: 3086.90, exchangeRate: 1.14102 },
-    { date: '2026-10-05', priceEthUsd: 2719.10, priceCbEthUsd: 3100.67, exchangeRate: 1.14033 },
-    { date: '2026-10-06', priceEthUsd: 2714.31, priceCbEthUsd: 3095.39, exchangeRate: 1.14040 },
-    { date: '2026-10-07', priceEthUsd: 2587.56, priceCbEthUsd: 2955.22, exchangeRate: 1.14209 },
-    { date: '2026-10-08', priceEthUsd: 2555.60, priceCbEthUsd: 2915.47, exchangeRate: 1.14082 },
-    { date: '2026-10-09', priceEthUsd: 2498.85, priceCbEthUsd: 2852.33, exchangeRate: 1.14146 },
-    { date: '2026-10-10', priceEthUsd: 2492.13, priceCbEthUsd: 2845.79, exchangeRate: 1.14191 },
-    { date: '2026-10-11', priceEthUsd: 2499.39, priceCbEthUsd: 2852.79, exchangeRate: 1.14140 },
-    { date: '2026-10-12', priceEthUsd: 2554.13, priceCbEthUsd: 2916.21, exchangeRate: 1.14176 },
-    { date: '2026-10-13', priceEthUsd: 2504.08, priceCbEthUsd: 2861.72, exchangeRate: 1.14282 },
-    { date: '2026-10-14', priceEthUsd: 2498.51, priceCbEthUsd: 2854.24, exchangeRate: 1.14237 },
-    { date: '2026-10-15', priceEthUsd: 2361.27, priceCbEthUsd: 2696.00, exchangeRate: 1.14176 }
+    { date: '2026-10-07', priceEthUsd: 2573.64, priceCbEthUsd: 2934.22, exchangeRate: 1.14011 },
+    { date: '2026-10-08', priceEthUsd: 2477.21, priceCbEthUsd: 2826.74, exchangeRate: 1.14110 },
+    { date: '2026-10-09', priceEthUsd: 2487.76, priceCbEthUsd: 2840.23, exchangeRate: 1.14168 },
+    { date: '2026-10-10', priceEthUsd: 2504.20, priceCbEthUsd: 2858.54, exchangeRate: 1.14150 },
+    { date: '2026-10-11', priceEthUsd: 2532.82, priceCbEthUsd: 2891.79, exchangeRate: 1.14173 },
+    { date: '2026-10-12', priceEthUsd: 2463.16, priceCbEthUsd: 2811.39, exchangeRate: 1.14138 },
+    { date: '2026-10-13', priceEthUsd: 2497.42, priceCbEthUsd: 2852.49, exchangeRate: 1.14218 },
+    { date: '2026-10-14', priceEthUsd: 2418.21, priceCbEthUsd: 2758.70, exchangeRate: 1.14080 },
+    { date: '2026-10-15', priceEthUsd: 2437.08, priceCbEthUsd: 2783.87, exchangeRate: 1.14230 },
+    { date: '2026-10-16', priceEthUsd: 2421.85, priceCbEthUsd: 2765.94, exchangeRate: 1.14208 },
+    { date: '2026-10-17', priceEthUsd: 2391.98, priceCbEthUsd: 2733.10, exchangeRate: 1.14261 },
+    { date: '2026-10-18', priceEthUsd: 2398.55, priceCbEthUsd: 2729.64, exchangeRate: 1.13804 },
+    { date: '2026-10-19', priceEthUsd: 2405.56, priceCbEthUsd: 2747.35, exchangeRate: 1.14208 },
+    { date: '2026-10-20', priceEthUsd: 2445.48, priceCbEthUsd: 2793.99, exchangeRate: 1.14251 },
+    { date: '2026-10-21', priceEthUsd: 2477.19, priceCbEthUsd: 2831.17, exchangeRate: 1.14290 },
+    { date: '2026-10-22', priceEthUsd: 2382.58, priceCbEthUsd: 2721.60, exchangeRate: 1.14229 },
+    { date: '2026-10-23', priceEthUsd: 2376.02, priceCbEthUsd: 2713.04, exchangeRate: 1.14184 },
+    { date: '2026-10-24', priceEthUsd: 2341.66, priceCbEthUsd: 2674.41, exchangeRate: 1.14210 },
+    { date: '2026-10-25', priceEthUsd: 2334.46, priceCbEthUsd: 2667.17, exchangeRate: 1.14252 },
+    { date: '2026-10-26', priceEthUsd: 2310.31, priceCbEthUsd: 2638.65, exchangeRate: 1.14212 },
+    { date: '2026-10-27', priceEthUsd: 2344.69, priceCbEthUsd: 2680.50, exchangeRate: 1.14322 },
+    { date: '2026-10-28', priceEthUsd: 2359.27, priceCbEthUsd: 2695.96, exchangeRate: 1.14271 },
+    { date: '2026-10-29', priceEthUsd: 2266.61, priceCbEthUsd: 2587.42, exchangeRate: 1.14153 },
+    { date: '2026-10-30', priceEthUsd: 2240.34, priceCbEthUsd: 2553.61, exchangeRate: 1.13983 },
+    { date: '2026-10-31', priceEthUsd: 2254.26, priceCbEthUsd: 2572.58, exchangeRate: 1.14121 },
+    { date: '2026-11-01', priceEthUsd: 2265.45, priceCbEthUsd: 2590.28, exchangeRate: 1.14338 },
+    { date: '2026-11-02', priceEthUsd: 2249.11, priceCbEthUsd: 2570.12, exchangeRate: 1.14273 },
+    { date: '2026-11-03', priceEthUsd: 2288.99, priceCbEthUsd: 2617.24, exchangeRate: 1.14340 },
+    { date: '2026-11-04', priceEthUsd: 2423.22, priceCbEthUsd: 2769.69, exchangeRate: 1.14298 },
+    { date: '2026-11-05', priceEthUsd: 2230.93, priceCbEthUsd: 2542.42, exchangeRate: 1.13962 }
   ];
 
   function hashAddress(address) {
@@ -109,19 +137,26 @@
     return Object.assign({}, CANONICAL_POSITION);
   }
 
-  function generate24hSeries(baseCbEth, baseEth, baseEr) {
+  function generate24hSeries(baseCbEth, baseEth, baseEr, anchorDateStr = '2026-11-05') {
     const hours = 24;
     const series = [];
-    const nowEpoch = 1792065600; // 15/10/2026 12:00:00 UTC
+    const anchorMs = Date.parse(anchorDateStr + 'T23:00:00Z');
+    const nowEpoch = Math.floor((isNaN(anchorMs) ? Date.now() : anchorMs) / 1000);
+    const startEr = Number((baseEr - 0.00010).toFixed(5));
+
     for (let h = 0; h < hours; h++) {
       const offsetSeconds = (hours - 1 - h) * 3600;
       const pointEpoch = nowEpoch - offsetSeconds;
       const d = new Date(pointEpoch * 1000);
       const hh = String(d.getUTCHours()).padStart(2, '0') + ':00';
-      const wave = Math.sin((h / hours) * Math.PI * 2) * 0.004;
-      const priceCbEth = Number((baseCbEth * (1 + wave)).toFixed(2));
-      const priceEth = Number((baseEth * (1 + wave * 0.95)).toFixed(2));
-      const er = Number((priceCbEth / priceEth).toFixed(5));
+      const progress = h / (hours - 1);
+      const wave = h === hours - 1 ? 0 : Math.sin((h / hours) * Math.PI * 2) * 0.0035;
+      const er = Number((startEr + progress * (baseEr - startEr)).toFixed(5));
+      const priceEth = Number((baseEth * (1 + wave)).toFixed(2));
+      const priceCbEth = h === hours - 1
+        ? Number(baseCbEth.toFixed(2))
+        : Number((priceEth * er).toFixed(2));
+
       series.push({
         date: hh,
         timestamp: d.toISOString(),
@@ -133,17 +168,16 @@
     return series;
   }
 
-  function generateExtendedSeries(daysCount, startEr, endEr, prng) {
+  function generateExtendedSeries(daysCount, startEr, endEr, prng, anchorStartDateStr = '2026-10-07') {
     const series = [];
-    const baseDate = new Date('2026-09-16T12:00:00Z');
-    const erStep = (endEr - startEr) / daysCount;
+    const baseDate = new Date(anchorStartDateStr + 'T12:00:00Z');
 
     for (let d = daysCount; d > 0; d--) {
       const ptDate = new Date(baseDate.getTime() - d * 86400000);
       const dateStr = ptDate.toISOString().substring(0, 10);
       const progress = (daysCount - d) / daysCount;
-      const noise = (prng() - 0.5) * 40;
-      const ethBase = 2200 + progress * 200 + noise;
+      const noise = (prng() - 0.5) * 45;
+      const ethBase = 2360 + Math.sin(progress * Math.PI) * 240 + noise;
       const er = Number((startEr + progress * (endEr - startEr)).toFixed(5));
       const cbEthPrice = Number((ethBase * er).toFixed(2));
       series.push({
@@ -174,10 +208,11 @@
       }));
     }
 
+    const firstPoint = base30d[0];
     const lastPoint = base30d[base30d.length - 1];
 
     if (tf === '24h') {
-      return generate24hSeries(lastPoint.priceCbEthUsd, lastPoint.priceEthUsd, lastPoint.exchangeRate);
+      return generate24hSeries(lastPoint.priceCbEthUsd, lastPoint.priceEthUsd, lastPoint.exchangeRate, lastPoint.date);
     }
     if (tf === '7d') {
       return base30d.slice(-7);
@@ -189,11 +224,11 @@
       return base30d.slice();
     }
     if (tf === '90d') {
-      const prior60 = generateExtendedSeries(60, 1.1340, 1.1395, prng);
+      const prior60 = generateExtendedSeries(60, 1.1345, firstPoint.exchangeRate, prng, firstPoint.date);
       return prior60.concat(base30d);
     }
     if (tf === 'all') {
-      const prior150 = generateExtendedSeries(150, 1.1240, 1.1395, prng);
+      const prior150 = generateExtendedSeries(150, 1.1255, firstPoint.exchangeRate, prng, firstPoint.date);
       return prior150.concat(base30d);
     }
 
@@ -210,10 +245,11 @@
           network: 'Base',
           balanceCbEth: 0.0,
           balanceEthGas: 0.0,
-          spotCbEthUsd: 2798.78,
-          spotEthUsd: 2450.45,
-          exchangeRate: 1.14215,
-          rateUsdBrl: 5.0980,
+          spotCbEthUsd: CANONICAL_POSITION.spotCbEthUsd,
+          spotEthUsd: CANONICAL_POSITION.spotEthUsd,
+          exchangeRate: CANONICAL_POSITION.exchangeRate,
+          protocolExchangeRate: CANONICAL_POSITION.protocolExchangeRate,
+          rateUsdBrl: CANONICAL_POSITION.rateUsdBrl,
           patrimonioCbEthEth: 0.0,
           patrimonioCbEthUsd: 0.0,
           patrimonioCbEthBrl: 0.0,
@@ -238,11 +274,12 @@
     const txCount = 3 + Math.floor(prng() * 3);
     const transactions = [];
     let cumulativeBalance = 0;
-    const baseEpoch = 1792065600;
+    const anchorLastDate = CANONICAL_SERIES_30D[CANONICAL_SERIES_30D.length - 1].date;
+    const baseEpoch = Math.floor(Date.parse(anchorLastDate + 'T12:00:00Z') / 1000);
 
     for (let i = 0; i < txCount; i++) {
       const amount = Number((0.003 + prng() * 0.012).toFixed(6));
-      const priceUsd = Number((2650 + prng() * 380).toFixed(2));
+      const priceUsd = Number((2520 + prng() * 380).toFixed(2));
       const totalUsd = Number((amount * priceUsd).toFixed(2));
       cumulativeBalance = Number((cumulativeBalance + amount).toFixed(6));
 
@@ -251,10 +288,11 @@
         txHash += Math.floor(prng() * 0xffffffff).toString(16).padStart(8, '0');
       }
 
-      const daysAgo = (txCount - i) * 8 + Math.floor(prng() * 4);
+      const daysAgo = (txCount - i) * 6 + Math.floor(prng() * 3);
       const txEpoch = baseEpoch - daysAgo * 86400;
       const dateObj = new Date(txEpoch * 1000);
       const dateStr = dateObj.toISOString().replace('T', ' ').substring(0, 19);
+      const entryEr = Number((1.1430 - daysAgo * 0.000095).toFixed(5));
 
       transactions.push({
         hash: txHash.substring(0, 66),
@@ -262,14 +300,16 @@
         type: 'in',
         amountCbEth: amount,
         priceUsd: priceUsd,
-        totalUsd: totalUsd
+        totalUsd: totalUsd,
+        entryExchangeRate: entryEr
       });
     }
 
-    const spotCbEth = 2798.78;
-    const spotEth = 2450.45;
-    const exchangeRate = 1.14215;
-    const rateUsdBrl = 5.0980;
+    const spotCbEth = CANONICAL_POSITION.spotCbEthUsd;
+    const spotEth = CANONICAL_POSITION.spotEthUsd;
+    const exchangeRate = CANONICAL_POSITION.exchangeRate;
+    const protocolExchangeRate = CANONICAL_POSITION.protocolExchangeRate;
+    const rateUsdBrl = CANONICAL_POSITION.rateUsdBrl;
     const gasEth = Number((0.00015 + prng() * 0.0005).toFixed(6));
     const patEth = Number((cumulativeBalance * exchangeRate).toFixed(6));
     const patUsd = Number((cumulativeBalance * spotCbEth).toFixed(2));
@@ -285,6 +325,7 @@
       spotCbEthUsd: spotCbEth,
       spotEthUsd: spotEth,
       exchangeRate: exchangeRate,
+      protocolExchangeRate: protocolExchangeRate,
       rateUsdBrl: rateUsdBrl,
       patrimonioCbEthEth: patEth,
       patrimonioCbEthUsd: patUsd,
@@ -309,6 +350,7 @@
 
   const FallbackData = {
     CANONICAL_WALLET,
+    CANONICAL_LAST_SYNCED_BLOCK,
     CANONICAL_POSITION,
     CANONICAL_TRANSACTIONS,
     CANONICAL_SERIES_30D,

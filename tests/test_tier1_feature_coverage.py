@@ -588,6 +588,204 @@ class TestTier1FeatureCoverage(unittest.TestCase):
 
         self.assertTrue(run_playwright_test(check_copy_btn))
 
+    # =========================================================================
+    # AREA 6: Integridade Matemática de Swaps, P&L Decomposto & Curvas Históricas
+    # =========================================================================
+
+    def test_t1_31_canonical_dca_five_swaps_exact(self):
+        """T1.31: DCA real ponderado das 5 transações canônicas resulta em $2,773.73 ($100.30 / 0.03616063 cbETH)."""
+        res = eval_in_node(
+            """
+            const txs = window.CbEth.FallbackData.getCanonicalTransactions();
+            const dca = window.CbEth.Calculator.calculateDca(txs);
+            const totalInvested = txs.reduce((acc, tx) => acc + (tx.totalUsd || 0), 0);
+            const totalQty = txs.reduce((acc, tx) => acc + (tx.amountCbEth || 0), 0);
+            return {
+                txCount: txs.length,
+                dca: Math.round(dca * 100) / 100,
+                totalInvested: Math.round(totalInvested * 100) / 100,
+                totalQty: Number(totalQty.toFixed(8))
+            };
+            """,
+            required_js_files=["fallback-data.js", "calculator.js"]
+        )
+        self.assertTrue(res["success"], f"Execution error: {res.get('error')}")
+        self.assertEqual(res["result"]["txCount"], 5)
+        self.assertEqual(res["result"]["totalInvested"], 100.30)
+        self.assertAlmostEqual(res["result"]["totalQty"], 0.03616063, places=7)
+        self.assertEqual(res["result"]["dca"], 2773.73)
+
+    def test_t1_32_decompose_pnl_algebraic_conservation_no_magic_1000(self):
+        """T1.32: Decomposição de P&L conserva Staking Yield + Variação Mercado == P&L Total sem fator espúrio 1000."""
+        res = eval_in_node(
+            """
+            const txs = window.CbEth.FallbackData.getCanonicalTransactions();
+            const calc = window.CbEth.Calculator;
+            const dca = calc.calculateDca(txs);
+            const entryEr = calc.calculateEntryExchangeRate(txs, 1.14019);
+            const bal = 0.03616063;
+            const spotPrice = 2542.42;
+            const spotEr = 1.14344;
+            const fx = 5.4687;
+
+            const pnl = calc.calculatePnl(spotPrice, dca, bal);
+            const dec = calc.decomposePnl(spotEr, entryEr, spotPrice, dca, bal, fx);
+
+            return {
+                entryEr,
+                pnlUsd: pnl.pnlUsd,
+                sumDecomposedUsd: dec.stakingYieldUsd + dec.marketChangeUsd,
+                stakingYieldUsd: dec.stakingYieldUsd,
+                stakingYieldBrl: dec.stakingYieldBrl,
+                lucroStakingGarantidoBrl: dec.lucroStakingGarantidoBrl,
+                netResultBrl: dec.netResultBrl,
+                expectedPnlBrl: pnl.pnlUsd * fx
+            };
+            """,
+            required_js_files=["fallback-data.js", "calculator.js"]
+        )
+        self.assertTrue(res["success"], f"Execution error: {res.get('error')}")
+        r = res["result"]
+        self.assertGreater(r["entryEr"], 1.138)
+        self.assertLess(r["entryEr"], 1.143)
+        self.assertAlmostEqual(r["sumDecomposedUsd"], r["pnlUsd"], places=6)
+        self.assertAlmostEqual(r["lucroStakingGarantidoBrl"], r["stakingYieldBrl"], places=6)
+        self.assertAlmostEqual(r["netResultBrl"], r["expectedPnlBrl"], places=6)
+        self.assertLess(r["stakingYieldUsd"], 2.0, "Staking yield de poucos meses não pode usar gênese 1.0 de 2022")
+
+    def test_t1_33_balance_chart_zero_before_first_purchase_no_inversion(self):
+        """T1.33: Gráfico 1 exibe saldo e custo 0.00 antes do primeiro aporte (2026-09-01) e acumula sem inversão."""
+        res = eval_in_node(
+            """
+            let capturedBalanceData = null;
+            let capturedMarketData = null;
+            globalThis.Chart = function(ctx, cfg) {
+                if (cfg.data.datasets[0].label.includes('Patrimônio')) {
+                    capturedBalanceData = cfg.data;
+                } else {
+                    capturedMarketData = cfg.data;
+                }
+                this.data = cfg.data;
+                this.options = cfg.options;
+                this.update = function() {};
+                this.destroy = function() {};
+            };
+            const fakeCanvas = { getContext: () => ({ createLinearGradient: () => ({ addColorStop: () => {} }) }) };
+            globalThis.document = {
+                getElementById: (id) => (id === 'chart-balance' || id === 'chart-market') ? fakeCanvas : null,
+                querySelector: () => null
+            };
+
+            const txs = window.CbEth.FallbackData.getCanonicalTransactions();
+            const seriesAll = window.CbEth.FallbackData.getHistoricalSeries('all', window.CbEth.FallbackData.CANONICAL_WALLET);
+            const bal = 0.036161;
+            window.CbEth.Charts.initCharts('chart-balance', 'chart-market');
+            window.CbEth.Charts.updateBalanceChart(seriesAll, 'USD', 5.50, bal, txs);
+
+            const prePurchaseIndices = [];
+            seriesAll.forEach((pt, idx) => {
+                if (pt.date < '2026-09-01') prePurchaseIndices.push(idx);
+            });
+            const prePat = prePurchaseIndices.map(i => capturedBalanceData.datasets[0].data[i]);
+            const preCost = prePurchaseIndices.map(i => capturedBalanceData.datasets[1].data[i]);
+            const allCosts = capturedBalanceData.datasets[1].data;
+            let monotonicCost = true;
+            for (let i = 1; i < allCosts.length; i++) {
+                if (allCosts[i] < allCosts[i - 1] - 1e-6) monotonicCost = false;
+            }
+            const lastPrice = seriesAll[seriesAll.length - 1].priceCbEthUsd;
+            const lastPat = capturedBalanceData.datasets[0].data[capturedBalanceData.datasets[0].data.length - 1];
+            const lastCost = allCosts[allCosts.length - 1];
+
+            return {
+                preCount: prePurchaseIndices.length,
+                maxPrePat: Math.max(...prePat),
+                maxPreCost: Math.max(...preCost),
+                monotonicCost,
+                lastPat,
+                expectedLastPat: Number((lastPrice * bal).toFixed(2)),
+                lastCost
+            };
+            """,
+            required_js_files=["fallback-data.js", "charts.js"]
+        )
+        self.assertTrue(res["success"], f"Execution error: {res.get('error')}")
+        r = res["result"]
+        self.assertGreater(r["preCount"], 0)
+        self.assertEqual(r["maxPrePat"], 0.0, "Patrimônio antes do primeiro aporte deve ser exatamente 0.0")
+        self.assertEqual(r["maxPreCost"], 0.0, "Custo investido antes do primeiro aporte deve ser exatamente 0.0")
+        self.assertTrue(r["monotonicCost"], "Custo investido acumulado deve ser monotonicamente não-decrescente")
+        self.assertEqual(r["lastCost"], 100.30)
+        self.assertAlmostEqual(r["lastPat"], r["expectedLastPat"], places=2)
+
+    def test_t1_34_all_time_pnl_invariant_across_timeframe_switches(self):
+        """T1.34: Resultado All Time (P&L) permanece invariante ao alternar janelas temporais (30d -> 7d -> 90d)."""
+        def check_invariance(page, errors, warnings):
+            page.wait_for_function(
+                "() => window.CbEth && window.CbEth.App && !window.CbEth.App.state.isLoading",
+                timeout=5000
+            )
+            pnl_el = page.locator("#pnlMonetary").first
+            mkt_el = page.locator("#pnlMarketChange").first
+
+            page.locator("[data-timeframe='30d']").first.click()
+            page.wait_for_timeout(250)
+            pnl_30d = pnl_el.inner_text()
+            mkt_30d = mkt_el.inner_text()
+
+            page.locator("[data-timeframe='7d']").first.click()
+            page.wait_for_timeout(250)
+            pnl_7d = pnl_el.inner_text()
+            mkt_7d = mkt_el.inner_text()
+
+            page.locator("[data-timeframe='90d']").first.click()
+            page.wait_for_timeout(250)
+            pnl_90d = pnl_el.inner_text()
+            mkt_90d = mkt_el.inner_text()
+
+            return {
+                "pnl": [pnl_30d, pnl_7d, pnl_90d],
+                "mkt": [mkt_30d, mkt_7d, mkt_90d],
+                "errors": errors
+            }
+
+        res = run_playwright_test(check_invariance)
+        self.assertEqual(len(res["errors"]), 0)
+        self.assertEqual(res["pnl"][0], res["pnl"][1])
+        self.assertEqual(res["pnl"][1], res["pnl"][2])
+        self.assertEqual(res["mkt"][0], res["mkt"][1], "Variação Spot All Time não deve oscilar com a janela do gráfico")
+        self.assertEqual(res["mkt"][1], res["mkt"][2])
+
+    def test_t1_35_decode_swap_receipt_usdc_valuation(self):
+        """T1.35: Decodificador de recibo on-chain extrai custo real em USDC de swaps 1inch/DEX."""
+        res = eval_in_node(
+            """
+            const fn = window.CbEth.Api.decodeSwapReceiptUsd;
+            const receiptTx5 = {
+                logs: [
+                    {
+                        address: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
+                        topics: [
+                            '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+                            '0x000000000000000000000000111116058b9828cdcdd810c502b925c14f34ca11',
+                            '0x000000000000000000000000498581ff718922c3f8e6a244956af099b2652b2b'
+                        ],
+                        data: '0x' + (25886113).toString(16).padStart(64, '0')
+                    }
+                ]
+            };
+            const totalUsd = fn(receiptTx5, '0xc4cfde467bc76d0d6df365584648371b1954b154', 0.01008449, 2600.0, 2250.0);
+            return {
+                totalUsd: Math.round(totalUsd * 100) / 100,
+                priceUsd: Math.round((totalUsd / 0.01008449) * 100) / 100
+            };
+            """,
+            required_js_files=["api.js"]
+        )
+        self.assertTrue(res["success"], f"Execution error: {res.get('error')}")
+        self.assertEqual(res["result"]["totalUsd"], 25.89)
+        self.assertEqual(res["result"]["priceUsd"], 2566.92)
+
 
 if __name__ == "__main__":
     unittest.main()
