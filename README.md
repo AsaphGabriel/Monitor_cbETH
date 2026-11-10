@@ -4,7 +4,7 @@ Dashboard analítico e aplicação web reativa para acompanhamento patrimonial, 
 
 A solução é construída sob uma **arquitetura híbrida de engenharia de dados e visualização**:
 1. **Relatório Analítico Power BI PBIP/PBIR v2.0.0:** Modelagem semântica em código puro (TMDL), 34 medidas DAX canônicas, visual containers atômicos e tema executivo escuro (*CryptoExecutiveDark*).
-2. **Single-Page Application (SPA) Web Zero-Build:** Interface moderna, reativa e modular em HTML5, Tailwind CSS e JavaScript ES6 (`window.CbEth`), operando sem etapas de compilação/build (`npm run build`), pronta para visualização local (`file://`), servidor estático ou deploy em nuvem (GitHub Pages / Vercel).
+2. **Single-Page Application (SPA) Web Zero-Build & PWA Fullscreen:** Interface moderna, reativa e modular em HTML5, Tailwind CSS e JavaScript ES6 (`window.CbEth`), operando como Progressive Web App (PWA) instalável com modo Tela Cheia nativo (HTML5 Fullscreen API) para todos os navegadores incluindo o Brave, operando sem etapas de compilação/build (`npm run build`), pronta para visualização local (`file://`), servidor estático ou deploy em nuvem (GitHub Pages / Vercel).
 3. **Camada de Ingestão On-Chain Resiliente:** Comunicação direta com nós RPC da Base L2, oráculos de preços da DeFiLlama, cotação cambial da AwesomeAPI e motor de fallback determinístico multi-janela com 100% de disponibilidade.
 
 ---
@@ -124,13 +124,13 @@ cd /home/ubuntu/Yggdrasil/02_Projetos_Ativos/Monitor_cbETH
 python3 tests/test_e2e_runner.py
 ```
 
-### Estrutura dos Tiers de Testes (79 Testes, 100% de Sucesso)
+### Estrutura dos Tiers de Testes (80 Testes, 100% de Sucesso)
 
 - **Tier 1: Feature Coverage (35 testes):** Cobertura unitária e funcional de cada uma das features isoladas (validação de endereços EVM, decodificação RPC e recibos USDC/Uniswap V4, cotações e histórico vivo DeFiLlama, DCA ponderado das 5 transações canônicas, Preço Médio de Período, P&L não realizado, conservação algébrica Staking vs Mercado invariante à janela temporal, curvas sem inversão pré-aporte, APY 3.10%, Termômetro Decisório, reatividade das 6 janelas temporais, alternância USD/ETH e ordenação do ledger).
 - **Tier 2: Boundary & Corner Cases (27 testes):** Testes de estresse e casos de borda (saldo zero, carteira nula `0x000...`, tolerância a falhas de rede, divisão segura por zero, clamping estrito do score em [40, 100], drawdown nulo e paridade 1.0).
 - **Tier 3: Cross-Feature Combinations (7 testes):** Combinações entre recursos múltiplos (troca simultânea de endereço + alternância de moedas USD/BRL + filtro temporal multi-janela + ordenação do ledger).
 - **Tier 4: Real-World Workloads (5 testes):** Workloads emulando fluxos reais de ponta a ponta (paridade dos 5 aportes auditados `0.036161 cbETH`, consulta sequencial de múltiplas carteiras, alternâncias rápidas de parâmetros e responsividade multi-resolução).
-- **Static & Normative Compliance (5 testes):** Auditoria estática automatizada verificando cumprimento estrito do Art. 9º (ausência total de caracteres Unicode emoji), Art. 7º (ausência de TODOs e stubs incompletos), presença de todos os contratos modulares e integridade dos artefatos TMDL/PBIR.
+- **Static & Normative Compliance (6 testes):** Auditoria estática automatizada verificando cumprimento estrito do Art. 9º (ausência total de caracteres Unicode emoji), Art. 7º (ausência de TODOs e stubs incompletos), manifesto PWA (`manifest.webmanifest`), Service Worker (`sw.js`), pacote de ícones e integridade dos artefatos TMDL/PBIR.
 
 ---
 
@@ -138,15 +138,21 @@ python3 tests/test_e2e_runner.py
 
 ```text
 02_Projetos_Ativos/Monitor_cbETH/
-├── index.html                           # SPA Web Zero-Build principal
+├── index.html                           # SPA Web Zero-Build principal com suporte a PWA e Fullscreen
 ├── dashboard_interativo.html             # Espelho sincronizado da SPA
+├── manifest.webmanifest                 # Manifesto PWA com display fullscreen/standalone para todos os navegadores
+├── manifest.json                        # Cópia do manifesto para ferramentas legadas
+├── sw.js                                # Service Worker PWA com cache-first do app shell
+├── favicon.ico                          # Ícone de favoritos padrão
+├── assets/
+│   └── icons/                           # Ícones PWA vetoriais (SVG) e bitmaps (192, 512, maskable)
 ├── js/
-│   ├── icons.js                         # Biblioteca SVG inline monocromática (Zero Emojis - Art. 9º)
+│   ├── icons.js                         # Biblioteca SVG inline monocromática com maximize/minimize (Art. 9º)
 │   ├── fallback-data.js                 # Dados canônicos e gerador determinístico Mulberry32
 │   ├── calculator.js                    # Motor financeiro e matemático (DCA, P&L, Termômetro)
 │   ├── api.js                           # Camada de ingestão on-chain resiliente (RPC, DeFiLlama, Câmbio)
 │   ├── charts.js                        # Camada de renderização dinâmica Chart.js v4 UMD
-│   └── app.js                           # Controlador principal e manipulador do DOM
+│   └── app.js                           # Controlador principal, manipulador do DOM, PWA e Fullscreen
 ├── tests/
 │   ├── test_e2e_runner.py               # Runner automatizado da suíte unificada E2E
 │   ├── helpers.py                       # Harness de execução Node.js e asserções
@@ -154,7 +160,7 @@ python3 tests/test_e2e_runner.py
 │   ├── test_tier2_boundary_corner.py    # Tier 2: Casos de borda e limites
 │   ├── test_tier3_cross_feature.py      # Tier 3: Combinações entre recursos
 │   ├── test_tier4_workloads.py          # Tier 4: Fluxos de uso reais fim-a-fim
-│   └── test_static_normative.py         # Conformidade estática e normativa
+│   └── test_static_normative.py         # Conformidade estática e normativa (6 testes)
 ├── carteira.json                        # Endereço da carteira monitorada
 ├── extrator_onchain.py                  # Script Python de extração de dados
 ├── dados/

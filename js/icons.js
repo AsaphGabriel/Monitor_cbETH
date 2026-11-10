@@ -62,6 +62,18 @@
 
     ethereum(cls = 'w-4 h-4') {
       return `<svg class="${cls}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 784.37 1277.39" fill="currentColor"><polygon points="392.07,0 383.5,29.11 383.5,873.74 392.07,882.29 784.13,650.54"/><polygon points="392.07,0 0,650.54 392.07,882.29 392.07,472.33"/><polygon points="392.07,956.52 387.24,962.41 387.24,1263.28 392.07,1277.38 784.37,724.89"/><polygon points="392.07,1277.38 392.07,956.52 0,724.89"/></svg>`;
+    },
+
+    maximize(cls = 'w-4 h-4') {
+      return `<svg class="${cls}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>`;
+    },
+
+    minimize(cls = 'w-4 h-4') {
+      return `<svg class="${cls}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>`;
+    },
+
+    download(cls = 'w-4 h-4') {
+      return `<svg class="${cls}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>`;
     }
   };
 

@@ -135,6 +135,36 @@ class TestStaticNormative(unittest.TestCase):
         self.assertTrue(os.path.exists(f1), f"{f1} deve existir")
         self.assertTrue(os.path.exists(f2), f"{f2} deve existir")
 
+    def test_s6_pwa_manifest_and_fullscreen_artifacts(self):
+        """PWA Web App Manifest, Service Worker e artefatos de Tela Cheia existem e estão válidos."""
+        import json
+        manifest_path = os.path.join(PROJECT_ROOT, "manifest.webmanifest")
+        sw_path = os.path.join(PROJECT_ROOT, "sw.js")
+        self.assertTrue(os.path.exists(manifest_path), "manifest.webmanifest deve existir na raiz")
+        self.assertTrue(os.path.exists(sw_path), "sw.js deve existir na raiz")
+
+        with open(manifest_path, "r", encoding="utf-8") as fp:
+            manifest_data = json.load(fp)
+
+        self.assertIn("display", manifest_data)
+        self.assertEqual(manifest_data["display"], "fullscreen")
+        self.assertIn("fullscreen", manifest_data.get("display_override", []))
+        self.assertGreater(len(manifest_data.get("icons", [])), 0)
+
+        # Icons exist
+        for icon in manifest_data["icons"]:
+            icon_file = os.path.join(PROJECT_ROOT, icon["src"])
+            self.assertTrue(os.path.exists(icon_file), f"Icon {icon['src']} deve existir")
+
+        # HTML references
+        for html_name in ["index.html", "dashboard_interativo.html"]:
+            html_path = os.path.join(PROJECT_ROOT, html_name)
+            with open(html_path, "r", encoding="utf-8") as fp:
+                html_content = fp.read()
+            self.assertIn('manifest.webmanifest', html_content)
+            self.assertIn('id="btn-fullscreen"', html_content)
+            self.assertIn('apple-mobile-web-app-capable', html_content)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -828,6 +828,135 @@
 
     const btnUpdateIcon = document.getElementById('btnUpdateIcon');
     if (btnUpdateIcon) btnUpdateIcon.innerHTML = icons.refresh('w-3.5 h-3.5');
+
+    const btnFullscreenIcon = document.getElementById('btnFullscreenIcon');
+    if (btnFullscreenIcon && typeof icons.maximize === 'function') {
+      btnFullscreenIcon.innerHTML = icons.maximize('w-3.5 h-3.5');
+    }
+
+    const btnInstallIcon = document.getElementById('btnInstallIcon');
+    if (btnInstallIcon && typeof icons.download === 'function') {
+      btnInstallIcon.innerHTML = icons.download('w-3.5 h-3.5');
+    }
+  }
+
+  let deferredInstallPrompt = null;
+
+  function isFullscreenActive() {
+    if (typeof document === 'undefined') return false;
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+  }
+
+  function toggleFullscreen() {
+    if (typeof document === 'undefined') return;
+    const docEl = document.documentElement;
+
+    if (!isFullscreenActive()) {
+      const requestFs = docEl.requestFullscreen ||
+                        docEl.webkitRequestFullscreen ||
+                        docEl.mozRequestFullScreen ||
+                        docEl.msRequestFullscreen;
+      if (requestFs) {
+        requestFs.call(docEl).catch((err) => {
+          console.warn('Falha ao entrar em tela cheia:', err);
+        });
+      }
+    } else {
+      const exitFs = document.exitFullscreen ||
+                     document.webkitExitFullscreen ||
+                     document.mozCancelFullScreen ||
+                     document.msExitFullscreen;
+      if (exitFs) {
+        exitFs.call(document).catch((err) => {
+          console.warn('Falha ao sair de tela cheia:', err);
+        });
+      }
+    }
+  }
+
+  function updateFullscreenUI() {
+    if (typeof document === 'undefined') return;
+    const icons = global.CbEth.Icons;
+    const btnFullscreen = document.getElementById('btn-fullscreen');
+    const iconContainer = document.getElementById('btnFullscreenIcon');
+    const labelContainer = document.getElementById('btnFullscreenText');
+
+    if (!btnFullscreen || !iconContainer || !icons) return;
+
+    const inFullscreen = isFullscreenActive();
+    if (inFullscreen) {
+      if (typeof icons.minimize === 'function') {
+        iconContainer.innerHTML = icons.minimize('w-3.5 h-3.5');
+      }
+      if (labelContainer) labelContainer.textContent = 'Janela';
+      btnFullscreen.setAttribute('title', 'Sair da Tela Cheia');
+      btnFullscreen.setAttribute('aria-label', 'Sair da Tela Cheia');
+      btnFullscreen.classList.add('bg-cyan-950/60', 'border-cyan-500/50', 'text-cyan-300');
+      btnFullscreen.classList.remove('bg-slate-800');
+    } else {
+      if (typeof icons.maximize === 'function') {
+        iconContainer.innerHTML = icons.maximize('w-3.5 h-3.5');
+      }
+      if (labelContainer) labelContainer.textContent = 'Tela Cheia';
+      btnFullscreen.setAttribute('title', 'Entrar em Tela Cheia');
+      btnFullscreen.setAttribute('aria-label', 'Entrar em Tela Cheia');
+      btnFullscreen.classList.remove('bg-cyan-950/60', 'border-cyan-500/50', 'text-cyan-300');
+      btnFullscreen.classList.add('bg-slate-800');
+    }
+  }
+
+  function setupPwaAndFullscreen() {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+    const btnFullscreen = document.getElementById('btn-fullscreen');
+    if (btnFullscreen) {
+      btnFullscreen.addEventListener('click', () => {
+        toggleFullscreen();
+      });
+    }
+
+    const fsEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
+    fsEvents.forEach((evt) => {
+      document.addEventListener(evt, updateFullscreenUI);
+    });
+
+    const btnInstall = document.getElementById('btn-install');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      if (btnInstall) {
+        btnInstall.classList.remove('hidden');
+        const iconContainer = document.getElementById('btnInstallIcon');
+        if (iconContainer && global.CbEth.Icons && typeof global.CbEth.Icons.download === 'function') {
+          iconContainer.innerHTML = global.CbEth.Icons.download('w-3.5 h-3.5');
+        }
+      }
+    });
+
+    if (btnInstall) {
+      btnInstall.addEventListener('click', async () => {
+        if (!deferredInstallPrompt) return;
+        deferredInstallPrompt.prompt();
+        const choice = await deferredInstallPrompt.userChoice;
+        if (choice && choice.outcome === 'accepted') {
+          btnInstall.classList.add('hidden');
+        }
+        deferredInstallPrompt = null;
+      });
+    }
+
+    window.addEventListener('appinstalled', () => {
+      if (btnInstall) btnInstall.classList.add('hidden');
+      deferredInstallPrompt = null;
+    });
+
+    if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      navigator.serviceWorker.register('./sw.js').catch((err) => {
+        console.warn('Falha no registro do Service Worker:', err);
+      });
+    }
+
+    updateFullscreenUI();
   }
 
   function init() {
@@ -837,6 +966,7 @@
     }
     hydrateInitialSnapshot();
     setupEvents();
+    setupPwaAndFullscreen();
     loadData(false);
   }
 
@@ -860,7 +990,10 @@
     copyToClipboard,
     formatCurrency,
     formatSignedCurrency,
-    formatCrypto
+    formatCrypto,
+    toggleFullscreen,
+    isFullscreenActive,
+    setupPwaAndFullscreen
   };
 
   global.CbEth.App = App;

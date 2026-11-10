@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#080B11"/>
+    </linearGradient>
+    <linearGradient id="topRight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#0284C7"/>
+    </linearGradient>
+    <linearGradient id="topLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60A5FA"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="botRight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284C7"/>
+      <stop offset="100%" stop-color="#0369A1"/>
+    </linearGradient>
+    <linearGradient id="botLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#1D4ED8" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  <rect width="504" height="504" x="4" y="4" rx="108" fill="none" stroke="#1E293B" stroke-width="4"/>
+
+  <!-- Halo Ring (Base L2 theme) -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="url(#ringGrad)" stroke-width="6" stroke-dasharray="8 6"/>
+
+  <!-- Ethereum / cbETH Staking Diamond -->
+  <!-- Top Left Facet -->
+  <polygon points="256,96 144,272 256,236" fill="url(#topLeft)"/>
+  <!-- Top Right Facet -->
+  <polygon points="256,96 256,236 368,272" fill="url(#topRight)"/>
+  <!-- Bottom Left Facet -->
+  <polygon points="256,256 144,292 256,416" fill="url(#botLeft)"/>
+  <!-- Bottom Right Facet -->
+  <polygon points="256,256 256,416 368,292" fill="url(#botRight)"/>
+</svg>
