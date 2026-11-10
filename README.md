@@ -126,10 +126,10 @@ python3 tests/test_e2e_runner.py
 
 ### Estrutura dos Tiers de Testes (80 Testes, 100% de Sucesso)
 
-- **Tier 1: Feature Coverage (35 testes):** Cobertura unitária e funcional de cada uma das features isoladas (validação de endereços EVM, decodificação RPC e recibos USDC/Uniswap V4, cotações e histórico vivo DeFiLlama, DCA ponderado das 5 transações canônicas, Preço Médio de Período, P&L não realizado, conservação algébrica Staking vs Mercado invariante à janela temporal, curvas sem inversão pré-aporte, APY 3.10%, Termômetro Decisório, reatividade das 6 janelas temporais, alternância USD/ETH e ordenação do ledger).
+- **Tier 1: Feature Coverage (35 testes):** Cobertura unitária e funcional de cada uma das features isoladas (validação de endereços EVM, decodificação RPC e recibos USDC/Uniswap V4, cotações e histórico vivo DeFiLlama, DCA ponderado das 7 transações canônicas, Preço Médio de Período, P&L não realizado, conservação algébrica Staking vs Mercado invariante à janela temporal, curvas sem inversão pré-aporte, APY 3.10%, Termômetro Decisório, reatividade das 6 janelas temporais, alternância USD/ETH e ordenação do ledger).
 - **Tier 2: Boundary & Corner Cases (27 testes):** Testes de estresse e casos de borda (saldo zero, carteira nula `0x000...`, tolerância a falhas de rede, divisão segura por zero, clamping estrito do score em [40, 100], drawdown nulo e paridade 1.0).
 - **Tier 3: Cross-Feature Combinations (7 testes):** Combinações entre recursos múltiplos (troca simultânea de endereço + alternância de moedas USD/BRL + filtro temporal multi-janela + ordenação do ledger).
-- **Tier 4: Real-World Workloads (5 testes):** Workloads emulando fluxos reais de ponta a ponta (paridade dos 5 aportes auditados `0.036161 cbETH`, consulta sequencial de múltiplas carteiras, alternâncias rápidas de parâmetros e responsividade multi-resolução).
+- **Tier 4: Real-World Workloads (5 testes):** Workloads emulando fluxos reais de ponta a ponta (paridade dos 7 aportes auditados `0.046924 cbETH`, consulta sequencial de múltiplas carteiras, alternâncias rápidas de parâmetros e responsividade multi-resolução).
 - **Static & Normative Compliance (6 testes):** Auditoria estática automatizada verificando cumprimento estrito do Art. 9º (ausência total de caracteres Unicode emoji), Art. 7º (ausência de TODOs e stubs incompletos), manifesto PWA (`manifest.webmanifest`), Service Worker (`sw.js`), pacote de ícones e integridade dos artefatos TMDL/PBIR.
 
 ---

@@ -30,7 +30,9 @@ CANONICAL_TX_HASHES = [
     "0xb5d2d0b5ff8512e9b0d62a342416ee3c2ef3be5045479cb2be4aa1796ca8ef8d",
     "0x4a9d7bdfaa373d523624e7561cf05db69fa7f4f6b57ae1ec9b8a07c3fb3c6b25",
     "0x89244b9b29dfdd97d00a8f8da97850785e5ca1d8898b2b1d31ec526796faf8f4",
-    "0x688291461a746fb348a520ec1ccfe59e6c8ea5d6135792320c274f8c3dff0477"
+    "0x688291461a746fb348a520ec1ccfe59e6c8ea5d6135792320c274f8c3dff0477",
+    "0xc9a69329c3220e89f3afb618d5a23c3d6ce468bc5d9dad590c1d73bbc2e6553e",
+    "0xec2e1c7363f77ffa9bb0d6deb40f0429c18826558b6362b2efe9e7f329e72bec"
 ]
 TIMEFRAMES = ["24h", "7d", "14d", "30d", "90d", "all"]
 TIMEFRAMES_UI = ["24h", "7d", "14d", "30d", "90d", "Tudo"]

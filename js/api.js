@@ -323,8 +323,8 @@
       }
 
       return {
-        balanceCbEth: 0.036161,
-        balanceEthGas: 0.000236,
+        balanceCbEth: 0.046924,
+        balanceEthGas: 0.000231,
         source: 'fallback'
       };
     })();
@@ -404,10 +404,10 @@
       }
 
       const fallbackPos = global.CbEth?.FallbackData?.getCanonicalPosition?.() || {
-        spotCbEthUsd: 2542.42,
-        spotEthUsd: 2230.93,
-        exchangeRate: 1.13962,
-        protocolExchangeRate: 1.14344,
+        spotCbEthUsd: 2344.36,
+        spotEthUsd: 2052.45,
+        exchangeRate: 1.14222,
+        protocolExchangeRate: 1.14374,
         rateUsdBrl: CONFIG.DEFAULT_USD_BRL
       };
 
@@ -712,9 +712,9 @@
         const dayStr = timestamp.substring(0, 10);
 
         const dayRef = priceMap.get(dayStr);
-        const fbCbEth = dayRef?.priceCbEthUsd || spotPrices?.cbEthUsd || 2542.42;
-        const fbEth = dayRef?.priceEthUsd || spotPrices?.ethUsd || 2230.93;
-        const entryEr = dayRef?.exchangeRate || spotPrices?.protocolExchangeRate || spotPrices?.exchangeRate || 1.14344;
+        const fbCbEth = dayRef?.priceCbEthUsd || spotPrices?.cbEthUsd || 2344.36;
+        const fbEth = dayRef?.priceEthUsd || spotPrices?.ethUsd || 2052.45;
+        const entryEr = dayRef?.exchangeRate || spotPrices?.protocolExchangeRate || spotPrices?.exchangeRate || 1.14374;
 
         const receiptRes = await callRpc('eth_getTransactionReceipt', [log.transactionHash]);
         const rawTotalUsd = receiptRes.success && receiptRes.result
@@ -755,12 +755,23 @@
     const midBal = await fetchBalanceAtBlock(cleanAddr, mid);
     if (midBal === null) return [];
 
+    const hasLeftDelta = Math.abs(midBal - startBal) > 1e-7;
+    const hasRightDelta = Math.abs(endBal - midBal) > 1e-7;
+
+    if (hasLeftDelta && hasRightDelta && budget.callsLeft >= 2) {
+      const [left, right] = await Promise.all([
+        discoverSwapsViaBisection(cleanAddr, startBlock, mid, startBal, midBal, priceMap, spotPrices, budget),
+        discoverSwapsViaBisection(cleanAddr, mid + 1, endBlock, midBal, endBal, priceMap, spotPrices, budget)
+      ]);
+      return [...left, ...right];
+    }
+
     const results = [];
-    if (Math.abs(midBal - startBal) > 1e-7 && budget.callsLeft > 0) {
+    if (hasLeftDelta && budget.callsLeft > 0) {
       const left = await discoverSwapsViaBisection(cleanAddr, startBlock, mid, startBal, midBal, priceMap, spotPrices, budget);
       results.push(...left);
     }
-    if (Math.abs(endBal - midBal) > 1e-7 && budget.callsLeft > 0) {
+    if (hasRightDelta && budget.callsLeft > 0) {
       const right = await discoverSwapsViaBisection(cleanAddr, mid + 1, endBlock, midBal, endBal, priceMap, spotPrices, budget);
       results.push(...right);
     }
@@ -823,7 +834,7 @@
       const liveBal = balances && balances.source === 'rpc' ? balances.balanceCbEth : knownNet;
       const hasBalanceDelta = balances && balances.source === 'rpc' && Math.abs(liveBal - knownNet) > 1e-6;
 
-      if (!hasBalanceDelta && !forceRefresh) {
+      if (!hasBalanceDelta) {
         cachedTxsByAddr[cleanAddr] = { timestamp: now, value: baseTxs };
         return baseTxs;
       }
@@ -833,7 +844,7 @@
           const blkRes = await callRpc('eth_blockNumber', []);
           if (blkRes.success && blkRes.result) {
             const latestBlock = parseInt(blkRes.result, 16);
-            const syncedBlock = fallbackModule.CANONICAL_LAST_SYNCED_BLOCK || 53602055;
+            const syncedBlock = fallbackModule.CANONICAL_LAST_SYNCED_BLOCK || 55721053;
             if (latestBlock > syncedBlock) {
               const priceMap = buildPriceLookupMap(spotPrices);
               let discovered = [];
@@ -846,7 +857,7 @@
               const netAfterRecent = sumNetTransactionsCbEth(mergedRecent);
 
               if (Math.abs(liveBal - netAfterRecent) > 1e-6 && recentFrom > syncedBlock + 1) {
-                const budget = { callsLeft: 10 };
+                const budget = { callsLeft: 32 };
                 const olderLogs = await discoverSwapsViaBisection(
                   cleanAddr,
                   syncedBlock + 1,
@@ -895,7 +906,7 @@
           if (Math.abs(balances.balanceCbEth - foundNet) > 1e-6) {
             const lookbackStart = Math.max(0, latestBlock - 7776000); // ~180 days on Base (2s blocks)
             const startBal = (await fetchBalanceAtBlock(cleanAddr, lookbackStart)) ?? 0.0;
-            const budget = { callsLeft: 10 };
+            const budget = { callsLeft: 32 };
             const older = await discoverSwapsViaBisection(
               cleanAddr,
               lookbackStart,

@@ -593,7 +593,7 @@ class TestTier1FeatureCoverage(unittest.TestCase):
     # =========================================================================
 
     def test_t1_31_canonical_dca_five_swaps_exact(self):
-        """T1.31: DCA real ponderado das 5 transações canônicas resulta em $2,773.73 ($100.30 / 0.03616063 cbETH)."""
+        """T1.31: DCA real ponderado das 7 transações canônicas resulta em $2,683.92 ($125.94 / 0.04692389 cbETH)."""
         res = eval_in_node(
             """
             const txs = window.CbEth.FallbackData.getCanonicalTransactions();
@@ -610,10 +610,10 @@ class TestTier1FeatureCoverage(unittest.TestCase):
             required_js_files=["fallback-data.js", "calculator.js"]
         )
         self.assertTrue(res["success"], f"Execution error: {res.get('error')}")
-        self.assertEqual(res["result"]["txCount"], 5)
-        self.assertEqual(res["result"]["totalInvested"], 100.30)
-        self.assertAlmostEqual(res["result"]["totalQty"], 0.03616063, places=7)
-        self.assertEqual(res["result"]["dca"], 2773.73)
+        self.assertEqual(res["result"]["txCount"], 7)
+        self.assertEqual(res["result"]["totalInvested"], 125.94)
+        self.assertAlmostEqual(res["result"]["totalQty"], 0.04692389, places=7)
+        self.assertEqual(res["result"]["dca"], 2683.92)
 
     def test_t1_32_decompose_pnl_algebraic_conservation_no_magic_1000(self):
         """T1.32: Decomposição de P&L conserva Staking Yield + Variação Mercado == P&L Total sem fator espúrio 1000."""
@@ -623,10 +623,10 @@ class TestTier1FeatureCoverage(unittest.TestCase):
             const calc = window.CbEth.Calculator;
             const dca = calc.calculateDca(txs);
             const entryEr = calc.calculateEntryExchangeRate(txs, 1.14019);
-            const bal = 0.03616063;
-            const spotPrice = 2542.42;
-            const spotEr = 1.14344;
-            const fx = 5.4687;
+            const bal = 0.04692389;
+            const spotPrice = 2344.36;
+            const spotEr = 1.14374;
+            const fx = 5.5122;
 
             const pnl = calc.calculatePnl(spotPrice, dca, bal);
             const dec = calc.decomposePnl(spotEr, entryEr, spotPrice, dca, bal, fx);
@@ -678,9 +678,9 @@ class TestTier1FeatureCoverage(unittest.TestCase):
 
             const txs = window.CbEth.FallbackData.getCanonicalTransactions();
             const seriesAll = window.CbEth.FallbackData.getHistoricalSeries('all', window.CbEth.FallbackData.CANONICAL_WALLET);
-            const bal = 0.036161;
+            const bal = 0.046924;
             window.CbEth.Charts.initCharts('chart-balance', 'chart-market');
-            window.CbEth.Charts.updateBalanceChart(seriesAll, 'USD', 5.50, bal, txs);
+            window.CbEth.Charts.updateBalanceChart(seriesAll, 'USD', 5.5122, bal, txs);
 
             const prePurchaseIndices = [];
             seriesAll.forEach((pt, idx) => {
@@ -715,7 +715,7 @@ class TestTier1FeatureCoverage(unittest.TestCase):
         self.assertEqual(r["maxPrePat"], 0.0, "Patrimônio antes do primeiro aporte deve ser exatamente 0.0")
         self.assertEqual(r["maxPreCost"], 0.0, "Custo investido antes do primeiro aporte deve ser exatamente 0.0")
         self.assertTrue(r["monotonicCost"], "Custo investido acumulado deve ser monotonicamente não-decrescente")
-        self.assertEqual(r["lastCost"], 100.30)
+        self.assertEqual(r["lastCost"], 125.94)
         self.assertAlmostEqual(r["lastPat"], r["expectedLastPat"], places=2)
 
     def test_t1_34_all_time_pnl_invariant_across_timeframe_switches(self):

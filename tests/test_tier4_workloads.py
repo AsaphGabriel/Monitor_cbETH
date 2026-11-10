@@ -50,7 +50,7 @@ class TestTier4Workloads(unittest.TestCase):
         self.assertTrue(len(res["title"]) > 0, "Título da página deve estar preenchido")
 
     def test_t4_02_canonical_wallet_data_parity(self):
-        """T4.2: Paridade com dados reais da carteira de referência: saldo 0.036161 cbETH, 0.000236 ETH e 5 aportes auditados."""
+        """T4.2: Paridade com dados reais da carteira de referência: saldo 0.046924 cbETH, 0.000231 ETH e 7 aportes auditados."""
         res = eval_in_node(
             f"""
             const pos = window.CbEth.FallbackData.getCanonicalPosition();
@@ -67,9 +67,9 @@ class TestTier4Workloads(unittest.TestCase):
         )
         self.assertTrue(res["success"], f"Execution error: {res.get('error')}")
         self.assertEqual(res["result"]["address"], REFERENCE_WALLET.lower())
-        self.assertAlmostEqual(res["result"]["balanceCbEth"], 0.036161, places=6)
-        self.assertAlmostEqual(res["result"]["balanceEthGas"], 0.000236, places=6)
-        self.assertEqual(res["result"]["txCount"], 5)
+        self.assertAlmostEqual(res["result"]["balanceCbEth"], 0.046924, places=6)
+        self.assertAlmostEqual(res["result"]["balanceEthGas"], 0.000231, places=6)
+        self.assertEqual(res["result"]["txCount"], 7)
         for h in CANONICAL_TX_HASHES:
             self.assertIn(h.lower(), res["result"]["txHashes"])
 

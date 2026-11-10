@@ -1,2 +1,2 @@
 data_hora,endereco_carteira,rede,saldo_cbeth,saldo_eth_gas,preco_eth_usd,preco_cbeth_usd,taxa_conversao_cbeth_eth,taxa_usd_brl,patrimonio_cbeth_eth,patrimonio_cbeth_usd,patrimonio_cbeth_brl,patrimonio_total_usd,patrimonio_total_brl
-"2026-11-05 23:43:16","0xc4cfde467bc76d0d6df365584648371b1954b154","Base",0.036161,0.000236,2234.03,2552.61,1.14260,5.4687,0.041317,92.30,504.78,92.83,507.66
+"2026-11-10 22:22:24","0xc4cfde467bc76d0d6df365584648371b1954b154","Base",0.046924,0.000231,2052.45,2344.36,1.14222,5.5122,0.053598,110.01,606.38,110.48,608.99

@@ -214,7 +214,7 @@
     }
   }
 
-  function updateBalanceChart(series, currency = 'USD', rateUsdBrl = 5.4687, balanceCbEth = 0.036161, transactions = []) {
+  function updateBalanceChart(series, currency = 'USD', rateUsdBrl = 5.5122, balanceCbEth = 0.046924, transactions = []) {
     if (!balanceChart || !Array.isArray(series) || series.length === 0) return;
 
     const labels = series.map(pt => pt.date || pt.timestamp);
@@ -232,7 +232,7 @@
     const maxTxMs = sortedTxs.reduce((mx, item) => (!isNaN(item.epochMs) && item.epochMs > mx ? item.epochMs : mx), -Infinity);
 
     const fallbackCostUsd = bal > 0
-      ? bal * ((series[series.length - 1] && series[series.length - 1].priceCbEthUsd) || 2542.42)
+      ? bal * ((series[series.length - 1] && series[series.length - 1].priceCbEthUsd) || 2344.36)
       : 0.0;
 
     const dataPatrimonio = [];

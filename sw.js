@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'cbeth-monitor-v2.1.0';
+const CACHE_NAME = 'cbeth-monitor-v2.2.0';
 
 const PRECACHE_ASSETS = [
   './',
@@ -21,8 +21,7 @@ const PRECACHE_ASSETS = [
   './js/app.js',
   './carteira.json',
   './dados/fato_posicao_atual.csv',
-  './dados/fato_historico_30d.csv',
-  './dados/fato_composicao_ativos.csv'
+  './dados/fato_historico_30d.csv'
 ];
 
 self.addEventListener('install', (event) => {
@@ -57,6 +56,7 @@ self.addEventListener('fetch', (event) => {
   const isDynamicApi = url.hostname.includes('base.org') ||
                        url.hostname.includes('publicnode.com') ||
                        url.hostname.includes('llama.fi') ||
+                       url.hostname.includes('er-api.com') ||
                        url.hostname.includes('awesomeapi.com.br') ||
                        url.hostname.includes('coingecko.com');
 
